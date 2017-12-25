@@ -9,7 +9,8 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using System.IO;
 using System.Xml.XPath;
-
+using System.Collections.Generic;
+using System.Linq;
 namespace RestreamChatHacking
 {
     public class AccessRestreamCode
@@ -18,7 +19,13 @@ namespace RestreamChatHacking
         private StringBuilder verificationErrors;
         private string baseURL;
         private bool acceptNextAlert = true;
-        
+
+        public delegate void SignalMessage(RestreamTchatMessage message);
+        public SignalMessage _onMessageDetected;
+        public Queue<RestreamTchatMessage> _lastMessages = new Queue<RestreamTchatMessage>();
+        public float _maxQueueSize=300;
+        public int _maxMessageInPage = 1000;//1000;
+
         public void SetupTest()
         {
             driver = new ChromeDriver();
@@ -42,14 +49,21 @@ namespace RestreamChatHacking
         
         public void TheAccessRestreamCodeTest()
         {
-            driver.Navigate().GoToUrl("https://restream.io/chat-app/v1/?theme=boxed&aligment=top&msgOpacity=15&chatOpacity=100&scale=150&timeout=60&hideMessages=false&userId=338979&token=SNNrJr2M8VvSJXZnCjxG");
+            //            driver.Navigate().GoToUrl("https://restream.io/chat-app/v1/?theme=boxed&aligment=top&msgOpacity=15&chatOpacity=100&scale=150&timeout=60&hideMessages=false&userId=338979&token=SNNrJr2M8VvSJXZnCjxG");
+            driver.Navigate().GoToUrl("http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d");
+            //http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
+            //http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
 
-            //int i = 3;
-             string firstDisplay = driver.PageSource;
+
+           int iChecKCount = 0;
+            string firstDisplay = driver.PageSource;
 
             //while (i > 0)
              while (true)
             {
+                iChecKCount++;
+
+
 
 
                 Console.WriteLine("---------------------------LOADING PAGE-------------------------");
@@ -57,19 +71,28 @@ namespace RestreamChatHacking
                 string pageCode = driver.PageSource;
                 File.WriteAllText(Environment.CurrentDirectory + "/Restream.html", pageCode);
                 var element = driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));
+                int messagesFound = element.Count;
                 Console.WriteLine("Message count:"+element.Count);
 
                 for (int i = 0; i < element.Count; i++)
                 {
                     string messageRaw = "<A>" + element[i].GetAttribute("innerHTML") + "</A>";
-                    
+
                     RestreamTchatMessage message = new RestreamTchatMessage();
                     message.UserName = GetValueOf(messageRaw, "message-sender");
                     message.When = GetValueOf(messageRaw, "message-time");
                     message.Message = GetValueOf(messageRaw, "message-text");
-                    message.SetPlatform( GetPlatformId(messageRaw));
-                    Console.WriteLine("Element[" + i + "]:" + message.ToString());
+                    message.SetPlatform(GetPlatformId(messageRaw));
 
+                    bool isMessageNew=  IsMessageNew(message.Id);
+                    if (isMessageNew) {
+                        Console.WriteLine("Element[" + i + "]:" + message.ToString());
+                        _lastMessages.Enqueue(message);
+                        if (_lastMessages.Count > _maxQueueSize)
+                            _lastMessages.Dequeue();
+                        if (_onMessageDetected != null)
+                            _onMessageDetected(message);
+                    }
 
 
                     //var sender = element[i].FindElement(By.XPath("//div[contains(@class, 'message-sender')]"));
@@ -77,13 +100,21 @@ namespace RestreamChatHacking
                     //Console.WriteLine("Sender:" + sender.Text);
 
                 }
-                
 
 
+
+                Console.WriteLine("Refresh page in " + (_maxMessageInPage - messagesFound) + " messages");
+                if (messagesFound > _maxMessageInPage)
+                    driver.Navigate().Refresh();
+
+
+                Console.WriteLine("");
+                Console.WriteLine("");
 
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
                 System.Threading.Thread.Sleep(5000);
                 //i--;
+
             }
             
             driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div/div[2]")).Click();
@@ -95,6 +126,13 @@ namespace RestreamChatHacking
             //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[2]")).Click();
             //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
             //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span")).Click();
+
+        }
+
+        public bool IsMessageNew(string messageId)
+        {
+            var result = _lastMessages.Where(p => p.Id == messageId);
+           return result.Count() <= 0;
         }
 
         private static  int GetNumberIn(string text)

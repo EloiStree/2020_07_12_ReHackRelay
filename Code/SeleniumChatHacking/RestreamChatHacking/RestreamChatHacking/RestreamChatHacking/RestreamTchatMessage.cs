@@ -2,6 +2,11 @@
 {
     public class RestreamTchatMessage
     {
+
+        public string Id {
+            get { return When + "|" + UserName; }
+        }
+
         private string _userName;
 
         public string UserName
@@ -28,8 +33,11 @@
 
         public enum TchatPlatform : int {
             RestreamInitMessage=0,
-            Twitch=1,
-            Restream=100
+            Twitch = 1,
+            Youtube = 5,
+            Facebook = 37,
+            Restream =100,
+            Discord=1001
         }
         private TchatPlatform _platformId;
 

@@ -27,23 +27,52 @@ namespace RestreamChatHacking
             // Filter / Mails messages ex: @Eloi -> mail with the message
             // OSC xor UDP addresses to send new messages info
             // Webhock addresses to send messages info
+            Console.Out.WriteLine(Environment.CurrentDirectory);
 
-        
+
+
             AccessRestreamCode d = new AccessRestreamCode();
 
             d._onMessageDetected += SaveAndNotify;
+            d._onMessageDetected += LaunchStreaming;
+            d._onMessageDetected += StopStreaming;
 
             d.SetupTest();
             d.TheAccessRestreamCodeTest();
             d.TeardownTest();
 
+
             string answer = "";
             while (answer != "q") {
+
+                
                 Console.WriteLine("Do you want to (q)uit");
                 answer =  Console.ReadLine();
             }
 
         }
+
+        private static void LaunchStreaming (RestreamTchatMessage message)
+        {
+            if (message.Message.Contains("!nexthackathon"))
+            {
+
+                Console.WriteLine("Action: Try to launch streaming");
+                System.Diagnostics.Process.Start(Environment.CurrentDirectory + "\\StartStreaming.bat");
+
+            }
+        }
+
+        private static void StopStreaming(RestreamTchatMessage message)
+        {
+            if (message.Message.Contains("!okthanks"))
+            {
+                Console.WriteLine("Action: Try to stop streaming");
+                System.Diagnostics.Process.Start(Environment.CurrentDirectory + "\\StopStreaming.bat");
+
+            }
+        }
+
         public static int maxMessagesTracked = 30;
         private static Queue<RestreamTchatMessage> _lastMessages = new Queue<RestreamTchatMessage>(maxMessagesTracked);
 

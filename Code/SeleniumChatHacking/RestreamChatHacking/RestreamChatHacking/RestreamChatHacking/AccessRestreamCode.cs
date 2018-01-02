@@ -68,6 +68,7 @@ namespace RestreamChatHacking
 
                 Console.WriteLine("---------------------------LOADING PAGE-------------------------");
                 Console.WriteLine("################################################################");
+
                 string pageCode = driver.PageSource;
                 File.WriteAllText(Environment.CurrentDirectory + "/Restream.html", pageCode);
                 var element = driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));

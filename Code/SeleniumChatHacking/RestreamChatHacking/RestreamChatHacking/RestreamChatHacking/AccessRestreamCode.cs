@@ -24,10 +24,15 @@ namespace RestreamChatHacking
         public SignalMessage _onMessageDetected;
         public Queue<RestreamTchatMessage> _lastMessages = new Queue<RestreamTchatMessage>();
         public float _maxQueueSize=300;
-        public int _maxMessageInPage = 1000;//1000;
+        public int _maxMessageInPage = 500;//1000;
 
-        public void SetupTest()
+        public int _frameTiming=500;
+
+        public bool _useDebug = false;
+
+        public void SetupTest(bool useDebug )
         {
+            _useDebug = useDebug;
             driver = new ChromeDriver();
             baseURL = "https://www.katalon.com/";
             verificationErrors = new StringBuilder();
@@ -46,94 +51,118 @@ namespace RestreamChatHacking
                 // Ignore errors if unable to close the browser
             }
         }
-        
+
         public void TheAccessRestreamCodeTest()
         {
             //            driver.Navigate().GoToUrl("https://restream.io/chat-app/v1/?theme=boxed&aligment=top&msgOpacity=15&chatOpacity=100&scale=150&timeout=60&hideMessages=false&userId=338979&token=SNNrJr2M8VvSJXZnCjxG");
-            driver.Navigate().GoToUrl("http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d");
+            driver.Navigate().GoToUrl("https://restream.io/embed-chat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d");
+            //https://restream.io/embed-chat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
             //http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
             //http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
 
 
-           int iChecKCount = 0;
+            int iChecKCount = 0;
             string firstDisplay = driver.PageSource;
 
             //while (i > 0)
-             while (true)
+            while (true)
             {
-                iChecKCount++;
-
-
-
-
-                Console.WriteLine("---------------------------LOADING PAGE-------------------------");
-                Console.WriteLine("################################################################");
-
-                string pageCode = driver.PageSource;
-                File.WriteAllText(Environment.CurrentDirectory + "/Restream.html", pageCode);
-                var element = driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));
-                int messagesFound = element.Count;
-                Console.WriteLine("Message count:"+element.Count);
-
-                for (int i = 0; i < element.Count; i++)
+                try
                 {
-                    string messageRaw = "<A>" + element[i].GetAttribute("innerHTML") + "</A>";
+                    iChecKCount++;
 
-                    RestreamTchatMessage message = new RestreamTchatMessage();
-                    message.UserName = GetValueOf(messageRaw, "message-sender");
-                    message.When = GetValueOf(messageRaw, "message-time");
-                    message.Message = GetValueOf(messageRaw, "message-text");
-                    message.SetPlatform(GetPlatformId(messageRaw));
 
-                    bool isMessageNew=  IsMessageNew(message.Id);
-                    if (isMessageNew) {
-                        Console.WriteLine("Element[" + i + "]:" + message.ToString());
-                        _lastMessages.Enqueue(message);
-                        if (_lastMessages.Count > _maxQueueSize)
-                            _lastMessages.Dequeue();
-                        if (_onMessageDetected != null)
-                            _onMessageDetected(message);
+
+                    if (_useDebug)
+                        Console.WriteLine("---------------------------LOADING PAGE-------------------------");
+
+                    if (_useDebug) Console.WriteLine("################################################################");
+
+                    string pageCode = driver.PageSource;
+                    File.WriteAllText(Environment.CurrentDirectory + "/Restream.html", pageCode);
+                    var element = driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));
+                    int messagesFound = element.Count;
+
+                    if (_useDebug)
+                        Console.WriteLine("Message count:" + element.Count);
+
+                    for (int i = 0; i < element.Count; i++)
+                    {
+                        string messageRaw = "<A>" + element[i].GetAttribute("innerHTML") + "</A>";
+
+                        RestreamTchatMessage message = new RestreamTchatMessage();
+                        message.UserName = GetValueOf(messageRaw, "message-sender");
+                        message.When = GetValueOf(messageRaw, "message-time");
+                        message.Message = GetValueOf(messageRaw, "message-text");
+                        message.SetPlatform(GetPlatformId(messageRaw));
+                        message.SetDateToNow();
+
+                        bool isMessageNew = IsMessageNew(message);
+                        if (isMessageNew)
+                        {
+
+                            if (_useDebug)
+                                Console.WriteLine("Element[" + i + "]:" + message.ToString());
+                            _lastMessages.Enqueue(message);
+                            if (_lastMessages.Count > _maxQueueSize)
+                                _lastMessages.Dequeue();
+                            if (_onMessageDetected != null)
+                                _onMessageDetected(message);
+                        }
+
+
+                        //var sender = element[i].FindElement(By.XPath("//div[contains(@class, 'message-sender')]"));
+                        //if(sender!=null)
+                        //Console.WriteLine("Sender:" + sender.Text);
+
                     }
 
 
-                    //var sender = element[i].FindElement(By.XPath("//div[contains(@class, 'message-sender')]"));
-                    //if(sender!=null)
-                    //Console.WriteLine("Sender:" + sender.Text);
+
+
+                    if (_useDebug)
+                        Console.WriteLine("Refresh page in " + (_maxMessageInPage - messagesFound) + " messages");
+                    if (messagesFound > _maxMessageInPage)
+                        driver.Navigate().Refresh();
+
+
+
+                    if (_useDebug)
+                    {
+                        Console.WriteLine("");
+                        Console.WriteLine("");
+                    }
+                    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+                    System.Threading.Thread.Sleep(_frameTiming);
+                    //i--;
 
                 }
-
-
-
-                Console.WriteLine("Refresh page in " + (_maxMessageInPage - messagesFound) + " messages");
-                if (messagesFound > _maxMessageInPage)
-                    driver.Navigate().Refresh();
-
-
-                Console.WriteLine("");
-                Console.WriteLine("");
-
-                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-                System.Threading.Thread.Sleep(5000);
-                //i--;
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(e);
+                }
+                // driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div/div[2]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[3]/div[2]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[3]/div[2]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[3]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[2]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
+                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span")).Click();
 
             }
-            
-            driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div/div[2]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[3]/div[2]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[3]/div[2]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[3]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[2]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
-            //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span")).Click();
-
         }
 
         public bool IsMessageNew(string messageId)
         {
-            var result = _lastMessages.Where(p => p.Id == messageId);
-           return result.Count() <= 0;
+            var result = _lastMessages.Where(p => p.Message == messageId);
+            return result.Count() <= 0;
+        }
+        public bool IsMessageNew(RestreamTchatMessage messageId)
+        {
+            var result = _lastMessages.Where(p => p.Equals(messageId));
+            return result.Count() <= 0;
         }
 
         private static  int GetNumberIn(string text)

@@ -29,15 +29,15 @@ namespace RestreamChatHacking
             // Webhock addresses to send messages info
             Console.Out.WriteLine(Environment.CurrentDirectory);
 
-
-
+            
             AccessRestreamCode d = new AccessRestreamCode();
 
             d._onMessageDetected += SaveAndNotify;
             d._onMessageDetected += LaunchStreaming;
             d._onMessageDetected += StopStreaming;
+            d._onMessageDetected += DisplayMessage;
 
-            d.SetupTest();
+            d.SetupTest(false);
             d.TheAccessRestreamCodeTest();
             d.TeardownTest();
 
@@ -50,6 +50,12 @@ namespace RestreamChatHacking
                 answer =  Console.ReadLine();
             }
 
+        }
+
+        private static void DisplayMessage(RestreamTchatMessage message)
+        {
+
+            Console.WriteLine(string.Format("{3} | {0},{1}:{2}", message.UserName, message.When, message.Message, message.Platform));
         }
 
         private static void LaunchStreaming (RestreamTchatMessage message)
@@ -81,6 +87,8 @@ namespace RestreamChatHacking
         public static MessageCommunication.IThrow allMessagesFile = new MessageCommunication.ThrowFile() { WriteBy = MessageCommunication.ThrowFile.WriteType.Appending, FilePath = "AllMessages.json", UseRelativePath = true };
 
         public static MessageCommunication.IThrow mailMeIfTagged = new MessageCommunication.ThrowGoogleMail() {};
+
+
         private static void SaveAndNotify(RestreamTchatMessage message)
         {
             while (_lastMessages.Count > maxMessagesTracked)
@@ -156,12 +164,12 @@ namespace RestreamChatHacking
         public class ThrowGoogleMail : IThrow
         {
 
-            private string Password;
+            private string _password;
 
-            public string MyProperty
+            public string Password
             {
-                get { return Password; }
-                set { Password = value; }
+                get { return _password; }
+                set { _password = value; }
             }
 
 
@@ -203,7 +211,7 @@ namespace RestreamChatHacking
                 client.Timeout = 10000;
                 client.DeliveryMethod = SmtpDeliveryMethod.Network;
                 client.UseDefaultCredentials = false;
-                client.Credentials = new System.Net.NetworkCredential(YourMail, Password);
+                client.Credentials = new System.Net.NetworkCredential(YourMail, _password);
 
                 MailMessage mm = new MailMessage(YourMail, TargetMail);
                 mm.Subject = "Restream Tchat participants";

@@ -1,26 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace RestreamChatHacking
 {
+    [Serializable]
     public class RestreamTchatMessage
     {
 
-        public RestreamTchatMessage() {
+        public RestreamTchatMessage()
+        {   }
 
-
-        }
-
-        public string Id {
+        public string Id
+        {
             get { return When + "|" + UserName; }
         }
-
-        private string _userName;
-
-        public string UserName
-        {
-            get { return _userName; }
-            set { _userName = value; }
-        }
+        [SerializeField]
         private string _message;
 
         public string Message
@@ -29,6 +24,16 @@ namespace RestreamChatHacking
             set { _message = value; }
         }
 
+        [SerializeField]
+        private string _userName;
+
+        public string UserName
+        {
+            get { return _userName; }
+            set { _userName = value; }
+        }
+       
+        [SerializeField]
         private string _when;
 
         public string When
@@ -37,6 +42,7 @@ namespace RestreamChatHacking
             set { _when = value; }
         }
 
+        [SerializeField]
         private string _date;
 
         public string Date
@@ -45,17 +51,19 @@ namespace RestreamChatHacking
             set { _date = value; }
         }
         public bool IsDateDefined() { return !string.IsNullOrEmpty(_date); }
-        public void SetDateToNow() {
+        public void SetDateToNow()
+        {
             _date = DateTime.Now.ToString("yyyy-MM-dd");
         }
 
-        public enum TchatPlatform : int {
-            RestreamInitMessage=0,
+        public enum TchatPlatform : int
+        {
+            RestreamInitMessage = 0,
             Twitch = 1,
             Youtube = 5,
             Facebook = 37,
-            Restream =100,
-            Discord=1001
+            Restream = 100,
+            Discord = 1001
         }
         private TchatPlatform _platformId;
 
@@ -65,11 +73,13 @@ namespace RestreamChatHacking
             set { _platformId = value; }
         }
 
-        public void SetPlatform(TchatPlatform platform) {
+        public void SetPlatform(TchatPlatform platform)
+        {
             _platformId = platform;
         }
-        public void SetPlatform(int platformId) {
-            _platformId = (TchatPlatform) platformId;
+        public void SetPlatform(int platformId)
+        {
+            _platformId = (TchatPlatform)platformId;
         }
 
         public override string ToString()
@@ -147,5 +157,8 @@ namespace RestreamChatHacking
                 return hashCode;
             }
         }
+       
     }
+
+
 }

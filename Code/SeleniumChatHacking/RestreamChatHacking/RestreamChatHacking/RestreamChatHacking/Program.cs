@@ -52,13 +52,13 @@ namespace RestreamChatHacking
 
         }
 
-        private static void DisplayMessage(RestreamTchatMessage message)
+        private static void DisplayMessage(RestreamChatMessage message)
         {
 
             Console.WriteLine(string.Format("{3} | {0},{1}:{2}", message.UserName, message.When, message.Message, message.Platform));
         }
 
-        private static void LaunchStreaming (RestreamTchatMessage message)
+        private static void LaunchStreaming (RestreamChatMessage message)
         {
             if (message.Message.Contains("!nexthackathon"))
             {
@@ -69,7 +69,7 @@ namespace RestreamChatHacking
             }
         }
 
-        private static void StopStreaming(RestreamTchatMessage message)
+        private static void StopStreaming(RestreamChatMessage message)
         {
             if (message.Message.Contains("!okthanks"))
             {
@@ -80,7 +80,7 @@ namespace RestreamChatHacking
         }
 
         public static int maxMessagesTracked = 30;
-        private static Queue<RestreamTchatMessage> _lastMessages = new Queue<RestreamTchatMessage>(maxMessagesTracked);
+        private static Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>(maxMessagesTracked);
 
         //BAD CODE CHANGE LATER -->
         public static MessageCommunication.IThrow recentMessagesFile = new MessageCommunication.ThrowFile() { WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding, FilePath = "LastMessages.json", UseRelativePath = true };
@@ -89,7 +89,7 @@ namespace RestreamChatHacking
         public static MessageCommunication.IThrow mailMeIfTagged = new MessageCommunication.ThrowGoogleMail() {};
 
 
-        private static void SaveAndNotify(RestreamTchatMessage message)
+        private static void SaveAndNotify(RestreamChatMessage message)
         {
             while (_lastMessages.Count > maxMessagesTracked)
                 _lastMessages.Dequeue();
@@ -108,19 +108,19 @@ namespace RestreamChatHacking
     public class MessageCommunication
     {
 
-        public static string ConvertToJson(RestreamTchatMessage message)
+        public static string ConvertToJson(RestreamChatMessage message)
         {
             return JsonConvert.SerializeObject(message);
         }
-        public static string ConvertToJson(IEnumerable<RestreamTchatMessage> messages)
+        public static string ConvertToJson(IEnumerable<RestreamChatMessage> messages)
         {
             return JsonConvert.SerializeObject(messages);
         }
         public interface IThrow
         {
 
-            void Send(RestreamTchatMessage message);
-            void Send(IEnumerable<RestreamTchatMessage> messagesGroup);
+            void Send(RestreamChatMessage message);
+            void Send(IEnumerable<RestreamChatMessage> messagesGroup);
         }
 
         public class ThrowFile : IThrow
@@ -136,12 +136,12 @@ namespace RestreamChatHacking
             public enum WriteType { Overriding, Appending}
             public WriteType WriteBy { get; set; }
 
-            public void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 Write(ConvertToJson(messagesGroup));
             }
 
-            public void Send(RestreamTchatMessage message)
+            public void Send(RestreamChatMessage message)
             {
                 Write(ConvertToJson(message));
             }
@@ -188,17 +188,17 @@ namespace RestreamChatHacking
                 set { _yourMail = value; }
             }
 
-            public void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 string msgContent = "";
-                foreach (RestreamTchatMessage msg in messagesGroup)
+                foreach (RestreamChatMessage msg in messagesGroup)
                 {
                     msgContent += "<p>" + msg.ToString() + "</p>";
                 }
                 SendMailByGoogle(msgContent);
             }
 
-            public void Send(RestreamTchatMessage message)
+            public void Send(RestreamChatMessage message)
             {
                 SendMailByGoogle(message.ToString());
             }
@@ -237,12 +237,12 @@ namespace RestreamChatHacking
             public enum CommunicationType { GET, POST}
             public CommunicationType Communication { get; set; }
 
-            public void Send(RestreamTchatMessage message)
+            public void Send(RestreamChatMessage message)
             {
                 throw new NotImplementedException();
             }
 
-            public void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 throw new NotImplementedException();
             }
@@ -257,17 +257,17 @@ namespace RestreamChatHacking
             public int PortIn { get; set; }
             public int PortOut { get; set; }
 
-            public abstract void Send(IEnumerable<RestreamTchatMessage> messagesGroup);
-            public abstract void Send(RestreamTchatMessage message);
+            public abstract void Send(IEnumerable<RestreamChatMessage> messagesGroup);
+            public abstract void Send(RestreamChatMessage message);
         }
         public class ThrowOSC : ThrowNetwork
         {
-            public override void Send(RestreamTchatMessage message)
+            public override void Send(RestreamChatMessage message)
             {
                 throw new NotImplementedException();
             }
 
-            public override void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 throw new NotImplementedException();
             }
@@ -275,24 +275,24 @@ namespace RestreamChatHacking
 
         public class ThrowUDP : ThrowNetwork
         {
-            public override void Send(RestreamTchatMessage message)
+            public override void Send(RestreamChatMessage message)
             {
                 throw new NotImplementedException();
             }
 
-            public override void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 throw new NotImplementedException();
             }
         }
         public class ThrowTCP : ThrowNetwork
         {
-            public override void Send(RestreamTchatMessage message)
+            public override void Send(RestreamChatMessage message)
             {
                 throw new NotImplementedException();
             }
 
-            public override void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 throw new NotImplementedException();
             }
@@ -300,12 +300,12 @@ namespace RestreamChatHacking
 
         public class ThrowWebSocket : IThrow
         {
-            public void Send(IEnumerable<RestreamTchatMessage> messagesGroup)
+            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 throw new NotImplementedException();
             }
 
-            public void Send(RestreamTchatMessage message)
+            public void Send(RestreamChatMessage message)
             {
                 throw new NotImplementedException();
             }

@@ -20,9 +20,9 @@ namespace RestreamChatHacking
         private string baseURL;
         private bool acceptNextAlert = true;
 
-        public delegate void SignalMessage(RestreamTchatMessage message);
+        public delegate void SignalMessage(RestreamChatMessage message);
         public SignalMessage _onMessageDetected;
-        public Queue<RestreamTchatMessage> _lastMessages = new Queue<RestreamTchatMessage>();
+        public Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>();
         public float _maxQueueSize=300;
         public int _maxMessageInPage = 500;//1000;
 
@@ -90,12 +90,13 @@ namespace RestreamChatHacking
                     {
                         string messageRaw = "<A>" + element[i].GetAttribute("innerHTML") + "</A>";
 
-                        RestreamTchatMessage message = new RestreamTchatMessage();
+                        RestreamChatMessage message = new RestreamChatMessage();
+                        message.SetDateToNow();
                         message.UserName = GetValueOf(messageRaw, "message-sender");
                         message.When = GetValueOf(messageRaw, "message-time");
                         message.Message = GetValueOf(messageRaw, "message-text");
                         message.SetPlatform(GetPlatformId(messageRaw));
-                        message.SetDateToNow();
+
 
                         bool isMessageNew = IsMessageNew(message);
                         if (isMessageNew)
@@ -110,10 +111,7 @@ namespace RestreamChatHacking
                                 _onMessageDetected(message);
                         }
 
-
-                        //var sender = element[i].FindElement(By.XPath("//div[contains(@class, 'message-sender')]"));
-                        //if(sender!=null)
-                        //Console.WriteLine("Sender:" + sender.Text);
+                        
 
                     }
 
@@ -141,16 +139,7 @@ namespace RestreamChatHacking
                 {
                     Console.Error.WriteLine(e);
                 }
-                // driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div/div[2]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[3]/div[2]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[3]/div[2]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[3]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span[2]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div[2]")).Click();
-                //driver.FindElement(By.XPath("//div[@id='jsMessagesBlock']/div[2]/div/span")).Click();
-
+             
             }
         }
 
@@ -159,7 +148,7 @@ namespace RestreamChatHacking
             var result = _lastMessages.Where(p => p.Message == messageId);
             return result.Count() <= 0;
         }
-        public bool IsMessageNew(RestreamTchatMessage messageId)
+        public bool IsMessageNew(RestreamChatMessage messageId)
         {
             var result = _lastMessages.Where(p => p.Equals(messageId));
             return result.Count() <= 0;

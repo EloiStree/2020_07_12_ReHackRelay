@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace RestreamChatHacking
 {
@@ -22,6 +23,7 @@ namespace RestreamChatHacking
         {
             get { return Timestamp + "|" + UserName; }
         }
+        [SerializeField]
         private string _message;
 
         public string Message
@@ -29,7 +31,8 @@ namespace RestreamChatHacking
             get { return _message; }
             set { _message = value; }
         }
-        
+
+        [SerializeField]
         private string _userName;
 
         public string UserName
@@ -37,7 +40,8 @@ namespace RestreamChatHacking
             get { return _userName; }
             set { _userName = value; }
         }
-        
+
+        [SerializeField]
         private string _when;
 
         public string When
@@ -45,7 +49,8 @@ namespace RestreamChatHacking
             get { return _when; }
             set { _when = value; }
         }
-        
+
+        [SerializeField]
         private string _date;
 
         public string Date
@@ -60,7 +65,7 @@ namespace RestreamChatHacking
             When = DateTime.Now.ToString("hh:mm:ss");
         }
 
-        public double Timestamp { get { return (new DateTime(Year,Month,Day,Hour,Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }
+        public double Timestamp { get { return (new DateTime(Year, Month, Day, Hour, Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }
 
         public enum ChatPlatform : int
         {
@@ -72,6 +77,7 @@ namespace RestreamChatHacking
             Restream = 100,
             Discord = 1001
         }
+        [SerializeField]
         private ChatPlatform _platformId;
 
         public ChatPlatform Platform

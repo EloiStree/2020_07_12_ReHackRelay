@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft;
+using Newtonsoft.Json;
 
 namespace RestreamChatHacking
 {
@@ -18,6 +20,7 @@ namespace RestreamChatHacking
             Platform = ChatPlatform.Unknow;
         }
 
+        [JsonIgnore]
         public string Id
         {
             get { return Timestamp + "|" + UserName; }
@@ -59,7 +62,7 @@ namespace RestreamChatHacking
             Date = DateTime.Now.ToString("yyyy-MM-dd");
             When = DateTime.Now.ToString("hh:mm:ss");
         }
-
+        [JsonIgnore]
         public double Timestamp { get { return (new DateTime(Year,Month,Day,Hour,Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }
 
         public enum ChatPlatform : int
@@ -80,11 +83,17 @@ namespace RestreamChatHacking
             set { _platformId = value; }
         }
 
+        [JsonIgnore]
         public int Year { get { return int.Parse(Date.Substring(0, 4)); } }
+        [JsonIgnore]
         public int Month { get { return int.Parse(Date.Substring(5, 2)); } }
+        [JsonIgnore]
         public int Day { get { return int.Parse(Date.Substring(8, 2)); } }
+        [JsonIgnore]
         public int Hour { get { return int.Parse(Date.Substring(0, 2)); } }
+        [JsonIgnore]
         public int Minute { get { return int.Parse(Date.Substring(2, 2)); } }
+        [JsonIgnore]
         public int Second { get { return int.Parse(Date.Substring(5, 2)); } }
 
         public void SetPlatform(ChatPlatform platform)

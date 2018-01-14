@@ -12,6 +12,8 @@ public class FileUpdateTracker : MonoBehaviour {
     public string _filePath;
     [Header("Event")]
     [SerializeField]
+    public FileChangedEvent _onFirstLoad;
+    [SerializeField]
     public FileChangedEvent _onFileChanged;
 
 
@@ -21,29 +23,37 @@ public class FileUpdateTracker : MonoBehaviour {
     public bool _fileUnreadable = false;
 
     IEnumerator Start () {
+        bool firstLoad=true;
         while (true) {
-            string lastTimeFileModified = "" + DateTimeToUnixTimestamp(File.GetLastWriteTimeUtc(_filePath)); ;
 
-            if (lastTimeFileModified != _lastTimeWrited) {
-                _lastTimeWrited = lastTimeFileModified;
-                _isUpdated = false;
-            }
-            if (!_isUpdated) {
-                string fileContent=null;
-                try {
-                    fileContent= File.ReadAllText(_filePath);
-                    _fileUnreadable = false;
-                    _isUpdated = true;
-                }
-                catch (IOException)
-                {
-                    _fileUnreadable = true;
-  //                  Debug.Log("File unreadabe");
-                }
-                if(!string.IsNullOrEmpty(fileContent))
-                 _onFileChanged.Invoke(fileContent);
-            }
+            if (File.Exists(_filePath)) { 
+                string lastTimeFileModified = "" + DateTimeToUnixTimestamp(File.GetLastWriteTimeUtc(_filePath)); ;
 
+                if (lastTimeFileModified != _lastTimeWrited) {
+                    _lastTimeWrited = lastTimeFileModified;
+                    _isUpdated = false;
+                }
+                if (!_isUpdated) {
+                    string fileContent=null;
+                    try {
+                        fileContent= File.ReadAllText(_filePath);
+
+                        if (firstLoad && !string.IsNullOrEmpty(fileContent))
+                            _onFirstLoad.Invoke(fileContent);
+                        else if (!string.IsNullOrEmpty(fileContent))
+                            _onFileChanged.Invoke(fileContent);
+
+                        _fileUnreadable = false;
+                        _isUpdated = true;
+                        firstLoad = false;
+                    }
+                    catch (IOException)
+                    {
+                        _fileUnreadable = true;
+      //                  Debug.Log("File unreadabe");
+                    }
+                }
+            }
             yield return new WaitForEndOfFrame();
         }
         
@@ -53,6 +63,10 @@ public class FileUpdateTracker : MonoBehaviour {
     {
         return (TimeZoneInfo.ConvertTimeToUtc(dateTime) -
                new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
+    }
+
+    public void SetPath(string path) {
+        _filePath = path;
     }
     //
 }

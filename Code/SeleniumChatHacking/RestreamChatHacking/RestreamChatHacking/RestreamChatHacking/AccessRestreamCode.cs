@@ -26,7 +26,7 @@ namespace RestreamChatHacking
         public float _maxQueueSize=300;
         public int _maxMessageInPage = 500;//1000;
 
-        public int _frameTiming=500;
+        public int _frameTiming=250;
 
         public bool _useDebug = false;
 

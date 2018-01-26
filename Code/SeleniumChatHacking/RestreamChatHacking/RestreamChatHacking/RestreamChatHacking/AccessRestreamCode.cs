@@ -34,7 +34,7 @@ namespace RestreamChatHacking
         {
             _useDebug = useDebug;
             driver = new ChromeDriver();
-            baseURL = "https://www.katalon.com/";
+            baseURL = "https://www.jams.center/";
             verificationErrors = new StringBuilder();
 
             
@@ -52,14 +52,9 @@ namespace RestreamChatHacking
             }
         }
 
-        public void TheAccessRestreamCodeTest()
-        {
-            //            driver.Navigate().GoToUrl("https://restream.io/chat-app/v1/?theme=boxed&aligment=top&msgOpacity=15&chatOpacity=100&scale=150&timeout=60&hideMessages=false&userId=338979&token=SNNrJr2M8VvSJXZnCjxG");
-            driver.Navigate().GoToUrl("https://restream.io/embed-chat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d");
-            //https://restream.io/embed-chat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
-            //http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
-            //http://restream.io/webchat?id=338979&guid=67248fed28fb4894a626c041e7d9fa3d
-
+        public void TheAccessRestreamCodeTest(string embedUrl)
+        {   
+            driver.Navigate().GoToUrl(embedUrl);
 
             int iChecKCount = 0;
             string firstDisplay = driver.PageSource;

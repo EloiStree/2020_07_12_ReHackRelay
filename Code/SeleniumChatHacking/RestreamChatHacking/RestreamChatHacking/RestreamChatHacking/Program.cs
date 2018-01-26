@@ -13,11 +13,16 @@ using System.Net.Mail;
 
 namespace RestreamChatHacking
 {
+
     class Program
     {
         static void Main(string[] args)
         {
-
+            string configPath = Environment.CurrentDirectory + "\\config.json";
+            if (!File.Exists(configPath) || (File.Exists(configPath) && File.ReadAllText(configPath).Length<=0) )
+                File.WriteAllText(configPath , JsonConvert.SerializeObject(ProjectConfig.Instance));
+            string config = File.ReadAllText(configPath);
+            ProjectConfig.SetInstance(JsonConvert.DeserializeObject<ProjectConfig>(config));
 
             //TO ADD TO ARGS
             // Config file path with
@@ -28,8 +33,10 @@ namespace RestreamChatHacking
             // OSC xor UDP addresses to send new messages info
             // Webhock addresses to send messages info
             Console.Out.WriteLine(Environment.CurrentDirectory);
+            Console.Out.WriteLine(JsonConvert.SerializeObject(ProjectConfig.Instance));
 
-            
+
+
             AccessRestreamCode d = new AccessRestreamCode();
 
             d._onMessageDetected += SaveAndNotify;
@@ -38,18 +45,17 @@ namespace RestreamChatHacking
             d._onMessageDetected += DisplayMessage;
 
             d.SetupTest(false);
-            d.TheAccessRestreamCodeTest();
+            d.TheAccessRestreamCodeTest(ProjectConfig.Instance._restreamEmbedURL);
             d.TeardownTest();
 
 
             string answer = "";
             while (answer != "q") {
-
                 
                 Console.WriteLine("Do you want to (q)uit");
                 answer =  Console.ReadLine();
             }
-
+            File.WriteAllText(configPath, JsonConvert.SerializeObject(ProjectConfig.Instance));
         }
 
         private static void DisplayMessage(RestreamChatMessage message)
@@ -91,6 +97,16 @@ namespace RestreamChatHacking
 
         private static void SaveAndNotify(RestreamChatMessage message)
         {
+
+            recentMessagesFile = new MessageCommunication.ThrowFile() {
+                WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding,
+                FilePath = ProjectConfig.Instance._recentMessagesPathFile, UseRelativePath = false };
+            allMessagesFile = new MessageCommunication.ThrowFile() {
+                WriteBy = MessageCommunication.ThrowFile.WriteType.Appending,
+                FilePath = ProjectConfig.Instance._allMessagesPathFile, UseRelativePath = false };
+            mailMeIfTagged = new MessageCommunication.ThrowGoogleMail() { };
+
+
             while (_lastMessages.Count > maxMessagesTracked)
                 _lastMessages.Dequeue();
             _lastMessages.Enqueue(message);
@@ -314,5 +330,29 @@ namespace RestreamChatHacking
         #endregion
         #endregion
     }
+
+}
+
+[System.Serializable]
+public class ProjectConfig {
+    public static ProjectConfig Instance = new ProjectConfig();
+    public bool IsRestreamDefined() { return !string.IsNullOrEmpty(_restreamEmbedURL); }
+    public bool IsFacebookPostDefined() { return !string.IsNullOrEmpty(_facebookPostURL); }
+    public bool ISLastMessagesDefiend() { return !string.IsNullOrEmpty(_recentMessagesPathFile); }
+    public bool IsAllMessagesDefined() { return !string.IsNullOrEmpty(_allMessagesPathFile); }
+
+    internal static void SetInstance(ProjectConfig projectConfig)
+    {
+        if (string.IsNullOrEmpty(projectConfig._allMessagesPathFile))
+            projectConfig._allMessagesPathFile = Environment.CurrentDirectory + "/" + "AllMessages.json";
+        if (string.IsNullOrEmpty(projectConfig._recentMessagesPathFile))
+            projectConfig._recentMessagesPathFile = Environment.CurrentDirectory + "/" + "LastMessages.json";
+        Instance = projectConfig;
+    }
+
+    public string _restreamEmbedURL;
+    public string _facebookPostURL;
+    public string _allMessagesPathFile;
+    public string _recentMessagesPathFile;  
 
 }

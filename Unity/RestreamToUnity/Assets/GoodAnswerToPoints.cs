@@ -7,33 +7,39 @@ using UnityEngine.UI;
 
 // BAD CODE NOT PROUD !! CHANGE LATER. In Rush need to code dirty
 public class GoodAnswerToPoints : MonoBehaviour {
-    
-    public int _twitchCount;
-    public int _youtubeCount;
-    public int _facebookCount;
 
-    public Text _twichUI;
-    public Text _YoutubeUI;
-    public Text _facebookUI;
+    [System.Serializable]
+    public class PlatformToPoint {
+        public RestreamChatMessage.ChatPlatform _platform;
+        public int _count;
+        public Text _display;
+
+        public void AddPoints(int value)
+        {
+            _count += value;
+            _display.text =""+ _count;
+        }
+    }
+
+    public PlatformToPoint[] _pointsListener = {
+        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Twitch},
+        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Facebook},
+        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Youtube},
+        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Discord}
+    };
+
 
  
   
 
-    public  void AddPointsToWinners(RestreamChatMessage winnerMessage)
+    public void AddPointsToWinners(RestreamChatMessage winnerMessage)
     {
-        switch (winnerMessage.Platform)
+        foreach (PlatformToPoint point in _pointsListener)
         {
-            case RestreamChatMessage.ChatPlatform.Twitch:
-                _twichUI.text = "" + (++_twitchCount);
-                break;
-            case RestreamChatMessage.ChatPlatform.Youtube:
-                _YoutubeUI.text = "" + (++_youtubeCount);
-                break;
-            case RestreamChatMessage.ChatPlatform.Facebook:
-                _facebookUI.text = "" + (++_facebookCount);
-                break;
-            default:
-                break;
+            if (winnerMessage.Platform == point._platform)
+                point.AddPoints(1);
+
+            
         }
     }
     

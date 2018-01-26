@@ -35,10 +35,12 @@ public class RestreamMathGame : MonoBehaviour {
     }
 
     private void SetNewEquation() {
-
-        if (!string.IsNullOrEmpty(_equation))
-            _correctAnswerUI.text = _equation + " = " + _answer;
-        else _correctAnswerUI.text = "";
+        if (_correctAnswerUI != null)
+        {
+            if (!string.IsNullOrEmpty(_equation))
+                _correctAnswerUI.text = _equation + " = " + _answer;
+            else _correctAnswerUI.text = "";
+        }
         int a = UnityEngine.Random.Range(_minValue, _maxValue);
         int b = UnityEngine.Random.Range(_minValue, _maxValue);
         Operation op = (Operation) UnityEngine.Random.Range(0, 2);

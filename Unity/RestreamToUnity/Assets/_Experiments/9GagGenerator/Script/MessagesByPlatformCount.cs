@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.UI;
 
 public class MessagesByPlatformCount : MonoBehaviour {
-
-    public int _youtubeCount;
-    public int _twitchCount;
-    public int _facebookCount;
+    
 
     void Start () {
 
@@ -16,34 +14,40 @@ public class MessagesByPlatformCount : MonoBehaviour {
 
     }
 
-    private void CountPlatfomrInteraction(RestreamChatMessage newMessage)
+    [System.Serializable]
+    public class PlatformToCount
     {
-        switch (newMessage.Platform)
+        public RestreamChatMessage.ChatPlatform _platform;
+        public int _count;
+        public Text _display;
+
+        public void AddPoints(int value)
         {
-            case RestreamChatMessage.ChatPlatform.Unknow:
-                break;
-            case RestreamChatMessage.ChatPlatform.RestreamInitMessage:
-                break;
-            case RestreamChatMessage.ChatPlatform.Twitch:
-                _twitchCount++;
-                break;
-            case RestreamChatMessage.ChatPlatform.Youtube:
-                _youtubeCount++;
-                break;
-            case RestreamChatMessage.ChatPlatform.Facebook:
-                _facebookCount++;
-                break;
-            case RestreamChatMessage.ChatPlatform.Restream:
-                break;
-            case RestreamChatMessage.ChatPlatform.Discord:
-                break;
-            default:
-                break;
+            _count += value;
+            _display.text = "" + _count;
         }
-
     }
 
-    public void Clear() {
-       _youtubeCount= _twitchCount= _facebookCount=0;
+    public PlatformToCount[] _messagesCount = {
+        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Twitch},
+        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Facebook},
+        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Youtube},
+        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Discord}
+    };
+
+
+
+
+
+    public void CountPlatfomrInteraction(RestreamChatMessage winnerMessage)
+    {
+        foreach (PlatformToCount point in _messagesCount)
+        {
+            if (winnerMessage.Platform == point._platform)
+                point.AddPoints(1);
+
+
+        }
     }
+   
 }

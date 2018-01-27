@@ -16,13 +16,141 @@ namespace RestreamChatHacking
 
     class Program
     {
+        public class AppData {
+            public static string RestreamAppDataPath
+            {get
+                {
+                return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\RestreamChatHacking";
+                }
+            }
+            public static string ConfigurationPath
+            {
+                get
+                {
+                    return RestreamAppDataPath+"\\config.json";
+                }
+            }
+            public static string LastMessagesPath
+            {
+                get
+                {
+                    return RestreamAppDataPath + "\\lastmessages.json";
+                }
+            }
+            public static string AllMessagesPath
+            {
+                get
+                {
+                    return RestreamAppDataPath + "\\allmessages.json";
+                }
+            }
+
+
+
+        }
+
+        public static void CreateReastreamFolder()
+        {
+            Directory.CreateDirectory(AppData.RestreamAppDataPath);
+        }
+        public static void CreateRestreamConfigFile()
+        {
+            if(!File.Exists(AppData.ConfigurationPath))
+                File.Create(AppData.ConfigurationPath);
+        }
+        public static void SaveConfigurationFile()
+        {
+            File.WriteAllText(AppData.ConfigurationPath, ChatHackerConfiguration.GetJson());
+        }
+        public static void LoadConfigurationFile()
+        {
+            ChatHackerConfiguration.SetFromJson(File.ReadAllText(AppData.ConfigurationPath));
+        }
+
+        public static void CreateAndOverrideFile(string path, string text) {
+            File.WriteAllText(path, text);
+        }
+        public static void AppendFile(string path, string text) {
+            CheckFilePresence(path);
+            File.AppendAllText(path, text);
+        }
+
+        public static void CheckFilePresence(string path) {
+            if (!File.Exists(path))
+                File.Create(path);
+        }
+
+
+
+
+        public static bool IsRestreamAppDataDefined() { return Directory.Exists(AppData.RestreamAppDataPath); }
+        public static bool IsConfigurationFileDefined() { return File.Exists(AppData.ConfigurationPath); }
+        public static bool IsLastMessagesFileDefined() { return File.Exists(AppData.LastMessagesPath); }
+        public static bool IsAllMessagesFileDefined() { return File.Exists(AppData.AllMessagesPath); }
+
+
         static void Main(string[] args)
         {
-            string configPath = Environment.CurrentDirectory + "\\config.json";
-            if (!File.Exists(configPath) || (File.Exists(configPath) && File.ReadAllText(configPath).Length<=0) )
-                File.WriteAllText(configPath , JsonConvert.SerializeObject(ProjectConfig.Instance));
-            string config = File.ReadAllText(configPath);
-            ProjectConfig.SetInstance(JsonConvert.DeserializeObject<ProjectConfig>(config));
+            CheckForFilesPresence();
+            LoadConfigurationFile();
+            HelloWorldAndCredit();
+
+            string answer = "";
+            AskForRestreamEmbedLink();
+            SaveConfigurationFile();
+            ConfigureUserOutput();
+
+            LaunchRestreamChatOberver();
+
+            AvoidUserToQuit();
+            SayGoodBye();
+        }
+
+        private static void LaunchRestreamChatOberver()
+        {
+            AccessRestreamCode restreamChat = new AccessRestreamCode();
+            AddListenersToRestreamChat(restreamChat);
+            LaunchRestreamChatObserver(restreamChat);
+        }
+
+        private static void LaunchRestreamChatObserver(AccessRestreamCode d)
+        {
+            d.Setup(false);
+            d.StartToListenAtRestreamEmbedUrl(ChatHackerConfiguration.Instance.GetRestreamChatURL());
+            d.Teardown();
+        }
+
+        private static void AddListenersToRestreamChat(AccessRestreamCode d)
+        {
+            // Save in files
+            d._onMessageDetected += SaveMessagesToFiles;
+            // Launch server from the chat
+            d._onMessageDetected += LaunchStreaming;
+            // Stop server from the chat
+            d._onMessageDetected += StopStreaming;
+            // Debug incoming message
+            d._onMessageDetected += DisplayMessage;
+        }
+
+        private static void SayGoodBye()
+        {
+            HelloWorldAndCredit();
+        }
+
+        private static void AvoidUserToQuit()
+        {
+            string answer = "";
+            while (answer != "q")
+            {
+
+                Console.WriteLine("Press any key to leave...");
+                answer = Console.ReadLine();
+            }
+            
+        }
+
+        private static void ConfigureUserOutput()
+        {
 
             //TO ADD TO ARGS
             // Config file path with
@@ -32,30 +160,110 @@ namespace RestreamChatHacking
             // Filter / Mails messages ex: @Eloi -> mail with the message
             // OSC xor UDP addresses to send new messages info
             // Webhock addresses to send messages info
-            Console.Out.WriteLine(Environment.CurrentDirectory);
-            Console.Out.WriteLine(JsonConvert.SerializeObject(ProjectConfig.Instance));
+            //Console.Out.WriteLine(JsonConvert.SerializeObject(ChatHackerConfiguration.Instance));
 
+        }
+        
+        private static void CheckForFilesPresence()
+        {
 
+            //Is folder RestreamChatHacking existing ?
+            //    NO: Create it
+            //Is File config exist ?
+            //    NO: Create file config
+            if (!IsRestreamAppDataDefined())
+                CreateReastreamFolder();
+            if (!IsConfigurationFileDefined())
+                CreateRestreamConfigFile();
 
-            AccessRestreamCode d = new AccessRestreamCode();
+            // Is all messages exist ?
+            //    Create all messages json
+            // Is recent messages exist ?
+            //    Create all messages json
+            CheckFilePresence(AppData.LastMessagesPath);
+            CheckFilePresence(AppData.AllMessagesPath);
+        }
 
-            d._onMessageDetected += SaveAndNotify;
-            d._onMessageDetected += LaunchStreaming;
-            d._onMessageDetected += StopStreaming;
-            d._onMessageDetected += DisplayMessage;
+        private static void HelloWorldAndCredit()
+        {
+            ///HELLO
+            Console.Out.WriteLine("#######################################################");
+            Console.Out.WriteLine("######  Hello & welcome to Restream Chat Hacker  ######");
+            Console.Out.WriteLine("#######################################################");
+            Console.Out.WriteLine("> Config stored in " + AppData.RestreamAppDataPath);
+            Console.Out.WriteLine("> Last messages stored in " + AppData.LastMessagesPath);
+            Console.Out.WriteLine("> All messages stored in " + AppData.AllMessagesPath);
+            Console.Out.WriteLine("> Code GitHub & Manual: " + "https://github.com/JamsCenter/2017_12_23_RestreamChatHacking");
+            Console.Out.WriteLine("> Issue to report: " + "https://github.com/JamsCenter/2017_12_23_RestreamChatHacking/issues");
+            Console.Out.WriteLine("> License: " + "https://github.com/JamsCenter/2017_12_23_RestreamChatHacking/wiki/License");
+            Console.Out.WriteLine("> Credit: " + "Strée Eloi - http://jams.center");
+            Console.Out.WriteLine("#######################################################");
 
-            d.SetupTest(false);
-            d.TheAccessRestreamCodeTest(ProjectConfig.Instance._restreamEmbedURL);
-            d.TeardownTest();
+            Console.Out.WriteLine(" ");
+            Console.Out.WriteLine(" ");
+            Console.Out.WriteLine(" ");
+        }
 
-
+        private static void AskForRestreamEmbedLink()
+        {
             string answer = "";
-            while (answer != "q") {
-                
-                Console.WriteLine("Do you want to (q)uit");
-                answer =  Console.ReadLine();
+            // Is user want to define a new restream ?
+            //    !Empty = yes => store it in config
+            //    Save the new config  
+
+            if (ChatHackerConfiguration.Instance.IsRestreamDefined())
+            {
+                answer = AskQuestion("Do you want to use this link for Restream IRC ?\n"
+                    + ChatHackerConfiguration.Instance.GetRestreamChatURL()
+                    , "(N)o or enter to continue");
+
+                if (IsNo(answer))
+                {
+                    DefinedRestreamChatURL();
+
+                }
             }
-            File.WriteAllText(configPath, JsonConvert.SerializeObject(ProjectConfig.Instance));
+            else {
+
+                DefinedRestreamChatURL();
+
+            }
+          
+
+        }
+
+        private static void DefinedRestreamChatURL()
+        {
+            string answer="";
+            do
+            {
+                answer = AskQuestion("Would you enter the Restream IRC embed link ?",
+                   "Enter to the Restream IRC link to continue");
+            } while (  !(answer.Trim().ToLower().StartsWith("http"))  );
+            //QUESTION TO ME:  SHOUD I CHECK IF THE ANSWER IS A  URL ???
+            ChatHackerConfiguration.Instance.SetRestreamChatURL(answer);
+        }
+
+        private static bool IsNo(string answer)
+        {
+            return answer.ToLower().StartsWith("n");
+        }
+        private static bool IsYes(string answer)
+        {
+            return answer.ToLower().StartsWith("y");
+        }
+
+        private static string AskQuestion(string question, string proposition)
+        {
+            string answer = "";
+            do
+            {
+                Console.Out.WriteLine(question);
+                Console.Out.WriteLine(proposition);
+                answer = Console.In.ReadLine();
+            } while (string.IsNullOrEmpty(answer));
+            Console.Out.WriteLine(">> " + answer);
+            return answer;
         }
 
         private static void DisplayMessage(RestreamChatMessage message)
@@ -66,7 +274,7 @@ namespace RestreamChatHacking
 
         private static void LaunchStreaming (RestreamChatMessage message)
         {
-            if (message.Message.Contains("!nexthackathon"))
+            if (message.Message.Contains("!startstreaming"))
             {
 
                 Console.WriteLine("Action: Try to launch streaming");
@@ -77,7 +285,7 @@ namespace RestreamChatHacking
 
         private static void StopStreaming(RestreamChatMessage message)
         {
-            if (message.Message.Contains("!okthanks"))
+            if (message.Message.Contains("!stopstreaming"))
             {
                 Console.WriteLine("Action: Try to stop streaming");
                 System.Diagnostics.Process.Start(Environment.CurrentDirectory + "\\StopStreaming.bat");
@@ -85,274 +293,100 @@ namespace RestreamChatHacking
             }
         }
 
-        public static int maxMessagesTracked = 30;
-        private static Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>(maxMessagesTracked);
 
         //BAD CODE CHANGE LATER -->
         public static MessageCommunication.IThrow recentMessagesFile = new MessageCommunication.ThrowFile() { WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding, FilePath = "LastMessages.json", UseRelativePath = true };
         public static MessageCommunication.IThrow allMessagesFile = new MessageCommunication.ThrowFile() { WriteBy = MessageCommunication.ThrowFile.WriteType.Appending, FilePath = "AllMessages.json", UseRelativePath = true };
+        
 
-        public static MessageCommunication.IThrow mailMeIfTagged = new MessageCommunication.ThrowGoogleMail() {};
-
-
-        private static void SaveAndNotify(RestreamChatMessage message)
+        private static Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>();
+        private static void SaveMessagesToFiles(RestreamChatMessage message)
         {
-
-            recentMessagesFile = new MessageCommunication.ThrowFile() {
+           
+            recentMessagesFile = new MessageCommunication.ThrowFile()
+            {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding,
-                FilePath = ProjectConfig.Instance._recentMessagesPathFile, UseRelativePath = false };
-            allMessagesFile = new MessageCommunication.ThrowFile() {
+                FilePath = AppData.LastMessagesPath,
+                UseRelativePath = false
+            };
+
+            allMessagesFile = new MessageCommunication.ThrowFile()
+            {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Appending,
-                FilePath = ProjectConfig.Instance._allMessagesPathFile, UseRelativePath = false };
-            mailMeIfTagged = new MessageCommunication.ThrowGoogleMail() { };
+                FilePath = AppData.AllMessagesPath,
+                UseRelativePath = false
+            };
 
 
-            while (_lastMessages.Count > maxMessagesTracked)
-                _lastMessages.Dequeue();
-            _lastMessages.Enqueue(message);
-            //File.AppendAllText
+            EnqueueWithMaximumBoundery(message);
+
             recentMessagesFile.Send(_lastMessages);
             allMessagesFile.Send(_lastMessages);
-          // DONE BUT NEET TO BE LINKED TO EXTERNAL FILE WITH MAIL AND PASSWORD OUT OF THE GIT.
-		  //  if (message.Message.Contains("JamsCenter")) {
-          //      mailMeIfTagged.Send(message);
-          //  }
-        } 
+            // DONE BUT NEET TO BE LINKED TO EXTERNAL FILE WITH MAIL AND PASSWORD OUT OF THE GIT.
+            //  if (message.Message.Contains("JamsCenter")) {
+            //      mailMeIfTagged.Send(message);
+            //  }
+        }
+
+        private static void EnqueueWithMaximumBoundery(RestreamChatMessage message)
+        {
+            while (_lastMessages.Count > ChatHackerConfiguration.Instance.MaximumMessagesTracked)
+                _lastMessages.Dequeue();
+            _lastMessages.Enqueue(message);
+        }
         //<--BAD CODE CHANGE LATER
 
     }
-    public class MessageCommunication
-    {
-
-        public static string ConvertToJson(RestreamChatMessage message)
-        {
-            return JsonConvert.SerializeObject(message);
-        }
-        public static string ConvertToJson(IEnumerable<RestreamChatMessage> messages)
-        {
-            return JsonConvert.SerializeObject(messages);
-        }
-        public interface IThrow
-        {
-
-            void Send(RestreamChatMessage message);
-            void Send(IEnumerable<RestreamChatMessage> messagesGroup);
-        }
-
-        public class ThrowFile : IThrow
-        {
-            public bool UseRelativePath { get; set; }
-            private string _filePath;
-
-            public string FilePath
-            {
-                get { return _filePath; }
-                set { _filePath = value; }
-            }
-            public enum WriteType { Overriding, Appending}
-            public WriteType WriteBy { get; set; }
-
-            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                Write(ConvertToJson(messagesGroup));
-            }
-
-            public void Send(RestreamChatMessage message)
-            {
-                Write(ConvertToJson(message));
-            }
-            public void Write(string json) {
-                string path = UseRelativePath ? Environment.CurrentDirectory + "/" + _filePath: _filePath;
-
-                if (WriteBy == WriteType.Overriding) {
-                    File.WriteAllText(path, json);
-                }
-                else if (WriteBy == WriteType.Appending)
-                {
-                    File.AppendAllText(path, json);
-
-                }
-
-            }
-        }
-
-      
-        public class ThrowGoogleMail : IThrow
-        {
-
-            private string _password;
-
-            public string Password
-            {
-                get { return _password; }
-                set { _password = value; }
-            }
-
-
-            private string _targetMail;
-
-            public string TargetMail
-            {
-                get { return _targetMail; }
-                set { _targetMail = value; }
-            }
-            private string _yourMail;
-
-            public string YourMail
-            {
-                get { return _yourMail; }
-                set { _yourMail = value; }
-            }
-
-            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                string msgContent = "";
-                foreach (RestreamChatMessage msg in messagesGroup)
-                {
-                    msgContent += "<p>" + msg.ToString() + "</p>";
-                }
-                SendMailByGoogle(msgContent);
-            }
-
-            public void Send(RestreamChatMessage message)
-            {
-                SendMailByGoogle(message.ToString());
-            }
-
-            public void SendMailByGoogle(string content) {
-                SmtpClient client = new SmtpClient();
-                client.Port = 587;
-                client.Host = "smtp.gmail.com";
-                client.EnableSsl = true;
-                client.Timeout = 10000;
-                client.DeliveryMethod = SmtpDeliveryMethod.Network;
-                client.UseDefaultCredentials = false;
-                client.Credentials = new System.Net.NetworkCredential(YourMail, _password);
-
-                MailMessage mm = new MailMessage(YourMail, TargetMail);
-                mm.Subject = "Restream Tchat participants";
-                mm.Body = "Chat participant was talking to you: " + content;
-                mm.BodyEncoding = UTF8Encoding.UTF8;
-                mm.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure;
-
-                client.Send(mm);
-                
-            }
-        }
-        #region TO DO LATER
-        public class ThrowWebPage: IThrow
-        {
-
-            private string _pageToCall;
-            public string PageToCall
-            {
-                get { return _pageToCall; }
-                set { _pageToCall = value; }
-            }
-
-            public enum CommunicationType { GET, POST}
-            public CommunicationType Communication { get; set; }
-
-            public void Send(RestreamChatMessage message)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        #region NETWORK
-
-        public abstract class ThrowNetwork : IThrow
-        {
-
-            public string Addresse { get; set; }
-            public int PortIn { get; set; }
-            public int PortOut { get; set; }
-
-            public abstract void Send(IEnumerable<RestreamChatMessage> messagesGroup);
-            public abstract void Send(RestreamChatMessage message);
-        }
-        public class ThrowOSC : ThrowNetwork
-        {
-            public override void Send(RestreamChatMessage message)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public class ThrowUDP : ThrowNetwork
-        {
-            public override void Send(RestreamChatMessage message)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                throw new NotImplementedException();
-            }
-        }
-        public class ThrowTCP : ThrowNetwork
-        {
-            public override void Send(RestreamChatMessage message)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public class ThrowWebSocket : IThrow
-        {
-            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Send(RestreamChatMessage message)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
-        #endregion
-    }
+   
 
 }
 
 [System.Serializable]
-public class ProjectConfig {
-    public static ProjectConfig Instance = new ProjectConfig();
-    public bool IsRestreamDefined() { return !string.IsNullOrEmpty(_restreamEmbedURL); }
-    public bool IsFacebookPostDefined() { return !string.IsNullOrEmpty(_facebookPostURL); }
-    public bool ISLastMessagesDefiend() { return !string.IsNullOrEmpty(_recentMessagesPathFile); }
-    public bool IsAllMessagesDefined() { return !string.IsNullOrEmpty(_allMessagesPathFile); }
+public class ChatHackerConfiguration {
+    public static ChatHackerConfiguration Instance = new ChatHackerConfiguration();
 
-    internal static void SetInstance(ProjectConfig projectConfig)
+
+    #region RESTREAM IRC
+    public bool IsRestreamDefined() { return !string.IsNullOrEmpty(_restreamEmbedURL); }
+    public string GetRestreamChatURL() { return _restreamEmbedURL; }
+    public string _restreamEmbedURL;
+    #endregion
+
+
+    #region FACEBOOK LINKS
+    public bool IsFacebookPostDefined() { return _facebookPostURL.Length > 0; }
+    public string [] GetFacebokPostURL() { return _facebookPostURL; }
+    public string [] _facebookPostURL;
+
+    #endregion
+
+    #region STORAGE INFO
+    public int _maxMessagesTracked = 30;
+    public int MaximumMessagesTracked { get { return _maxMessagesTracked; } }
+    #endregion
+    #region SAVE AND LOAD
+    public static string GetJson()
     {
-        if (string.IsNullOrEmpty(projectConfig._allMessagesPathFile))
-            projectConfig._allMessagesPathFile = Environment.CurrentDirectory + "/" + "AllMessages.json";
-        if (string.IsNullOrEmpty(projectConfig._recentMessagesPathFile))
-            projectConfig._recentMessagesPathFile = Environment.CurrentDirectory + "/" + "LastMessages.json";
-        Instance = projectConfig;
+        return JsonConvert.SerializeObject(Instance);
     }
 
-    public string _restreamEmbedURL;
-    public string _facebookPostURL;
-    public string _allMessagesPathFile;
-    public string _recentMessagesPathFile;  
+    public static void SetFromJson(string json)
+    {
+        try
+        {
+
+            Instance = JsonConvert.DeserializeObject<ChatHackerConfiguration>(json);
+        }
+        catch (Exception e) {
+            Console.Out.WriteLine(e);
+        }
+    }
+
+
+    public void SetRestreamChatURL(string url)
+    {
+        _restreamEmbedURL = url;
+    }
+    #endregion
 
 }

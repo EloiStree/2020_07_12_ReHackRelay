@@ -540,6 +540,7 @@ GameObject:
   - component: {fileID: 587493328}
   - component: {fileID: 587493327}
   - component: {fileID: 587493326}
+  - component: {fileID: 587493329}
   m_Layer: 0
   m_Name: FromJson
   m_TagString: Untagged
@@ -611,7 +612,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d00206c34a990e645a3f09e0e31dae1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _filePath: 
+  _filePath: C:\Users\JamsCenterStudio\AppData\Roaming\RestreamChatHacking\lastmessages.json
   _onFirstLoad:
     m_PersistentCalls:
       m_Calls:
@@ -647,6 +648,20 @@ MonoBehaviour:
   _lastTimeWrited: 
   _isUpdated: 1
   _fileUnreadable: 0
+--- !u!114 &587493329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 587493324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52ba1e3c2c39c064f8d3381098d41206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _fileTracker: {fileID: 587493328}
+  _appDataPath: C:\Users\JamsCenterStudio\AppData\Roaming\RestreamChatHacking
+  _lastMessages: lastmessages.json
 --- !u!1 &614210055
 GameObject:
   m_ObjectHideFlags: 0
@@ -1954,7 +1969,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _linkedBank: {fileID: 1925848448}
   _buyablePrefabs:
-  - _idName: buy robot
+  - _idName: '!buy robot'
     _cost: 500
     _prefab: {fileID: 1806787253206890, guid: 1092386c69d794646a8673e661e4373f, type: 2}
   - _idName: buy drone

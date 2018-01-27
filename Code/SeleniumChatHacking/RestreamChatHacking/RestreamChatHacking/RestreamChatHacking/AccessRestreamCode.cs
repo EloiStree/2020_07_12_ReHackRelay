@@ -30,7 +30,7 @@ namespace RestreamChatHacking
 
         public bool _useDebug = false;
 
-        public void SetupTest(bool useDebug )
+        public void Setup(bool useDebug )
         {
             _useDebug = useDebug;
             driver = new ChromeDriver();
@@ -40,7 +40,7 @@ namespace RestreamChatHacking
             
         }
         
-        public void TeardownTest()
+        public void Teardown()
         {
             try
             {
@@ -52,7 +52,7 @@ namespace RestreamChatHacking
             }
         }
 
-        public void TheAccessRestreamCodeTest(string embedUrl)
+        public void StartToListenAtRestreamEmbedUrl(string embedUrl)
         {   
             driver.Navigate().GoToUrl(embedUrl);
 

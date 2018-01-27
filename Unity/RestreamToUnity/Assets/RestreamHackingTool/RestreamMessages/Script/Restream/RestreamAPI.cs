@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Linq;
 using System;
 using UnityEngine.Events;
+using System.IO;
 
 namespace RestreamChatHacking
 {
@@ -99,7 +100,59 @@ namespace RestreamChatHacking
                 _registeredMessages.Clear();
             }
         }
-       
+
+        public class AppData
+        {
+            public static string RestreamAppDataPath
+            {
+                get
+                {
+                    return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\RestreamChatHacking";
+                }
+            }
+            public static string ConfigurationPath
+            {
+                get
+                {
+                    return RestreamAppDataPath + "\\config.json";
+                }
+            }
+            public static string LastMessagesPath
+            {
+                get
+                {
+                    return RestreamAppDataPath + "\\lastmessages.json";
+                }
+            }
+            public static string AllMessagesPath
+            {
+                get
+                {
+                    return RestreamAppDataPath + "\\allmessages.json";
+                }
+            }
+
+
+
+        }
+
+        public static void CreateReastreamFolder()
+        {
+            Directory.CreateDirectory(AppData.RestreamAppDataPath);
+        }
+        public static void CreateRestreamConfigFile()
+        {
+            if (!File.Exists(AppData.ConfigurationPath))
+                File.Create(AppData.ConfigurationPath);
+        }
+      
+
+        public static bool IsRestreamAppDataDefined() { return Directory.Exists(AppData.RestreamAppDataPath); }
+        public static bool IsConfigurationFileDefined() { return File.Exists(AppData.ConfigurationPath); }
+        public static bool IsLastMessagesFileDefined() { return File.Exists(AppData.LastMessagesPath); }
+        public static bool IsAllMessagesFileDefined() { return File.Exists(AppData.AllMessagesPath); }
+
+
     }
 
 }

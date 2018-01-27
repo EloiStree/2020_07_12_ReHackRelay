@@ -51,6 +51,7 @@ namespace RestreamChatHacking
         #endregion
 
 
+        
 
         public class Access
         {
@@ -63,7 +64,7 @@ namespace RestreamChatHacking
             {
                 return Memory.Messages.Where(p => p.UserName == userName).OrderBy(p => p.Timestamp).ToArray();
             }
-            public static RestreamChatMessage[] GetMessagesOfPlatform(RestreamChatMessage.ChatPlatform platform)
+            public static RestreamChatMessage[] GetMessagesOfPlatform(ChatPlatform platform)
             {
                 return Memory.Messages.Where(p => p.Platform == platform).OrderBy( p =>p.Timestamp).ToArray();
             }

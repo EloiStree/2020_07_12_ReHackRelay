@@ -10,7 +10,7 @@ public class GoodAnswerToPoints : MonoBehaviour {
 
     [System.Serializable]
     public class PlatformToPoint {
-        public RestreamChatMessage.ChatPlatform _platform;
+        public ChatPlatform _platform;
         public int _count;
         public Text _display;
 
@@ -22,10 +22,10 @@ public class GoodAnswerToPoints : MonoBehaviour {
     }
 
     public PlatformToPoint[] _pointsListener = {
-        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Twitch},
-        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Facebook},
-        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Youtube},
-        new PlatformToPoint() { _platform= RestreamChatMessage.ChatPlatform.Discord}
+        new PlatformToPoint() { _platform= ChatPlatform.Twitch},
+        new PlatformToPoint() { _platform= ChatPlatform.Facebook},
+        new PlatformToPoint() { _platform= ChatPlatform.Youtube},
+        new PlatformToPoint() { _platform= ChatPlatform.Discord}
     };
 
 

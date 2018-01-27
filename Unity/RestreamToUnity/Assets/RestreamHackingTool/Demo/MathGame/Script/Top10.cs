@@ -15,7 +15,7 @@ public class Top10 : MonoBehaviour {
     public class Score
     {
         public string playerName;
-        public RestreamChatMessage.ChatPlatform playerPlatform;
+        public ChatPlatform playerPlatform;
         public int score = 0;
     }
 

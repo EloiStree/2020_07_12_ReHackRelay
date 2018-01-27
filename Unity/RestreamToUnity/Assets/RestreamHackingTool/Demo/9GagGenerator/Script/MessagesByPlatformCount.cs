@@ -17,7 +17,7 @@ public class MessagesByPlatformCount : MonoBehaviour {
     [System.Serializable]
     public class PlatformToCount
     {
-        public RestreamChatMessage.ChatPlatform _platform;
+        public ChatPlatform _platform;
         public int _count;
         public Text _display;
 
@@ -29,10 +29,10 @@ public class MessagesByPlatformCount : MonoBehaviour {
     }
 
     public PlatformToCount[] _messagesCount = {
-        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Twitch},
-        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Facebook},
-        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Youtube},
-        new PlatformToCount() { _platform= RestreamChatMessage.ChatPlatform.Discord}
+        new PlatformToCount() { _platform= ChatPlatform.Twitch},
+        new PlatformToCount() { _platform= ChatPlatform.Facebook},
+        new PlatformToCount() { _platform= ChatPlatform.Youtube},
+        new PlatformToCount() { _platform= ChatPlatform.Discord}
     };
 
 

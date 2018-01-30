@@ -345,7 +345,20 @@ namespace RestreamChatHacking
 public class ChatHackerConfiguration {
     public static ChatHackerConfiguration Instance = new ChatHackerConfiguration();
 
+    [System.Serializable]
+    public class Debug
+    {
+       public  bool DisplayMessage=true;
 
+    }
+
+    private Debug _debug;
+    public Debug DebugOption { get {
+            if (_debug == null)
+                _debug = new Debug();
+            return _debug;
+        }
+    }
     #region RESTREAM IRC
     public bool IsRestreamDefined() { return !string.IsNullOrEmpty(_restreamEmbedURL); }
     public string GetRestreamChatURL() { return _restreamEmbedURL; }
@@ -372,14 +385,18 @@ public class ChatHackerConfiguration {
 
     public static void SetFromJson(string json)
     {
+        ChatHackerConfiguration config=null;
         try
         {
+            config = JsonConvert.DeserializeObject<ChatHackerConfiguration>(json); 
 
-            Instance = JsonConvert.DeserializeObject<ChatHackerConfiguration>(json);
         }
         catch (Exception e) {
             Console.Out.WriteLine(e);
         }
+
+        if (config != null)
+            Instance = config;
     }
 
 

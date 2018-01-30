@@ -62,8 +62,9 @@ namespace RestreamChatHacking
             //while (i > 0)
             while (true)
             {
-                try
-                {
+                string pageCode ="";
+                //try
+                //{
                     iChecKCount++;
 
 
@@ -73,8 +74,8 @@ namespace RestreamChatHacking
 
                     if (_useDebug) Console.WriteLine("################################################################");
 
-                    string pageCode = driver.PageSource;
-                    File.WriteAllText(Environment.CurrentDirectory + "/Restream.html", pageCode);
+                    pageCode = driver.PageSource;
+                    File.WriteAllText(Program.AppData.RestreamAppDataPath + "/Restream.html", pageCode);
                     var element = driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));
                     int messagesFound = element.Count;
 
@@ -83,13 +84,13 @@ namespace RestreamChatHacking
 
                     for (int i = 0; i < element.Count; i++)
                     {
-                        string messageRaw = "<A>" + element[i].GetAttribute("innerHTML") + "</A>";
+                        string messageRaw = "<div>" + element[i].GetAttribute("innerHTML") + "</div>";
 
                         RestreamChatMessage message = new RestreamChatMessage();
                         message.SetDateToNow();
+                        message.Message = GetValueOf(messageRaw, "message-text");
                         message.UserName = GetValueOf(messageRaw, "message-sender");
                         message.When = GetValueOf(messageRaw, "message-time");
-                        message.Message = GetValueOf(messageRaw, "message-text");
                         message.SetPlatform(GetPlatformId(messageRaw));
 
 
@@ -129,11 +130,14 @@ namespace RestreamChatHacking
                     System.Threading.Thread.Sleep(_frameTiming);
                     //i--;
 
-                }
-                catch (Exception e)
-                {
-                    Console.Error.WriteLine(e);
-                }
+                //}
+                //catch (Exception e)
+                //{
+                //    Console.WriteLine("############################# LOADED PAGE ###################################");
+                //    Console.WriteLine(""+pageCode); 
+                //    Console.WriteLine("############################# EXCEPTION ###################################");
+                //    Console.Error.WriteLine(e);
+                //}
              
             }
         }
@@ -151,31 +155,85 @@ namespace RestreamChatHacking
 
         private static  int GetNumberIn(string text)
         {
+            if (string.IsNullOrEmpty(text))
+                return (int) RestreamChatMessage.ChatPlatform.Unknow;
             return Int32.Parse(Regex.Match(text, @"\d+").Value);
         }
 
         private static string GetValueOf(string messageRaw, string attribute)
         {
-            string value;
-            var xPathDoc = new XPathDocument(new StringReader(messageRaw));
-            var nav = xPathDoc.CreateNavigator();
-            var sender = nav.Select("//*[contains(@class, '" + attribute + "')]");
-            sender.MoveNext();
-            value = sender.Current.Value;
-            return value;
+
+
+            //string[] images;
+            //if(Find(messageRaw, out images));
+            //{
+            //    foreach (var image in images)
+            //    {
+            //        string url = FindUrlInImage(image);
+            //        messageRaw.Replace(image, "![img]("+url+")");
+            //    }
+            //}
+
+            string messageRawWithoutImage = RemoveImagesFrom(messageRaw,"");
+
+
+            try
+            {
+
+                string value;
+                var xPathDoc = new XPathDocument(new StringReader(messageRawWithoutImage));
+                var nav = xPathDoc.CreateNavigator();
+                var sender = nav.Select("//*[contains(@class, '" + attribute + "')]");
+                sender.MoveNext();
+                value = sender.Current.Value;
+                return value;
+            }
+            catch (Exception e)
+            {
+                if (ChatHackerConfiguration.Instance.DebugOption.DisplayMessage)
+                    Console.WriteLine("" + messageRaw);
+                Console.WriteLine("############################# Message ###################################");
+                Console.WriteLine("" + messageRaw);
+                Console.WriteLine("############################# EXCEPTION ###################################");
+                Console.Error.WriteLine(e);
+                throw new MessageNotReadableException();
+            }
+            finally
+            {
+            }
         }
+
         private static int GetPlatformId(string messageRaw)
         {
-            string value;
+            string messageRawWithoutImage = RemoveImagesFrom(messageRaw, "");
+            
             var xPathDoc = new XPathDocument(new StringReader(messageRaw));
             var nav = xPathDoc.CreateNavigator();
             var sender = nav.Select("//*[contains(@class, 'icon-platform')]");
             sender.MoveNext();
             sender.Current.MoveToFirstAttribute();
-          
             return GetNumberIn(sender.Current.Value);
         }
 
+        public static string urlInSrcPatter = "src\\s*=\\s*\"(.+?)\"";
+        public static string htmlImageTagPattern = "<img\\s[^>]*?src\\s*=\\s*['\\\"]([^'\\\"]*?)['\\\"][^>]*?>";
+        private static string RemoveImagesFrom(string messageRaw,string replacement="[img]")
+        {
+            
+            return Regex.Replace(messageRaw, htmlImageTagPattern, replacement);
+        }
+        private static bool Find(string messageRaw, out string [] imagesFound)
+        {
+
+            List<string> results = new List<string>();
+            foreach (Match match in Regex.Matches(messageRaw, htmlImageTagPattern)) {
+               // Console.WriteLine("Found '{0}' at position {1}",match.Value, match.Index);
+                results.Add(match.Value);
+            }
+            imagesFound= results.ToArray<string>();
+            return imagesFound.Length>0;
+        }
+        
         private bool IsElementPresent(By by)
         {
             try

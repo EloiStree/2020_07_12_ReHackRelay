@@ -67,6 +67,7 @@ namespace RestreamChatHacking
 
         public enum ChatPlatform : int
         {
+            Mockup = -2,
             Unknow = -1,
             RestreamInitMessage = 0,
             Twitch = 1,

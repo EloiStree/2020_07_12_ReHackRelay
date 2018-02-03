@@ -111,6 +111,13 @@ namespace RestreamChatHacking
             AccessRestreamCode restreamChat = new AccessRestreamCode();
             AddListenersToRestreamChat(restreamChat);
             LaunchRestreamChatObserver(restreamChat);
+            AddMockUpSystem(restreamChat);
+        }
+
+        private static AccessRestreamCode mockUpAccess;
+        private static void AddMockUpSystem(AccessRestreamCode restreamChat)
+        {
+            mockUpAccess = restreamChat;
         }
 
         private static void LaunchRestreamChatObserver(AccessRestreamCode d)
@@ -145,6 +152,9 @@ namespace RestreamChatHacking
 
                 Console.WriteLine("Press any key to leave...");
                 answer = Console.ReadLine();
+                mockUpAccess.FakeMessage("RestreamHacking", answer, RestreamChatMessage.ChatPlatform.Mockup);
+
+
             }
             
         }
@@ -294,15 +304,16 @@ namespace RestreamChatHacking
         }
 
 
-        //BAD CODE CHANGE LATER -->
-        public static MessageCommunication.IThrow recentMessagesFile = new MessageCommunication.ThrowFile() { WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding, FilePath = "LastMessages.json", UseRelativePath = true };
-        public static MessageCommunication.IThrow allMessagesFile = new MessageCommunication.ThrowFile() { WriteBy = MessageCommunication.ThrowFile.WriteType.Appending, FilePath = "AllMessages.json", UseRelativePath = true };
         
 
         private static Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>();
         private static void SaveMessagesToFiles(RestreamChatMessage message)
         {
-           
+            MessageCommunication.IThrow recentMessagesFile;
+            MessageCommunication.IThrow allMessagesFile;
+            MessageCommunication.IThrow sendUdpMessages;
+
+            //TODO IF want store recent message in file
             recentMessagesFile = new MessageCommunication.ThrowFile()
             {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding,
@@ -310,6 +321,7 @@ namespace RestreamChatHacking
                 UseRelativePath = false
             };
 
+            //TODO IF want store all messages in file
             allMessagesFile = new MessageCommunication.ThrowFile()
             {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Appending,
@@ -317,11 +329,16 @@ namespace RestreamChatHacking
                 UseRelativePath = false
             };
 
+            //TODO IF want boardcast udp message localy
+            sendUdpMessages = new MessageCommunication.ThrowUDP(ChatHackerConfiguration.Instance.UDPServerPortIn, ChatHackerConfiguration.Instance.UDPServerPortOut);
 
             EnqueueWithMaximumBoundery(message);
 
             recentMessagesFile.Send(_lastMessages);
             allMessagesFile.Send(_lastMessages);
+            sendUdpMessages.Send(_lastMessages);
+
+
             // DONE BUT NEET TO BE LINKED TO EXTERNAL FILE WITH MAIL AND PASSWORD OUT OF THE GIT.
             //  if (message.Message.Contains("JamsCenter")) {
             //      mailMeIfTagged.Send(message);
@@ -365,6 +382,24 @@ public class ChatHackerConfiguration {
     public string _restreamEmbedURL;
     #endregion
 
+    #region UDP SERVER
+    private int _udpServerPortIn= 2501;
+
+    public int UDPServerPortIn
+    {
+        get { return _udpServerPortIn; }
+        set { _udpServerPortIn = value; }
+    }
+    private int _udpServerPortOut=2502;
+
+    public int UDPServerPortOut
+    {
+        get { return _udpServerPortOut; }
+        set { _udpServerPortOut = value; }
+    }
+
+
+    #endregion
 
     #region FACEBOOK LINKS
     public bool IsFacebookPostDefined() { return _facebookPostURL.Length > 0; }

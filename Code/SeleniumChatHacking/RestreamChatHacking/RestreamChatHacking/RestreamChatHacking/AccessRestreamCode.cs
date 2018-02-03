@@ -83,38 +83,26 @@ namespace RestreamChatHacking
                         Console.WriteLine("Message count:" + element.Count);
 
                     for (int i = 0; i < element.Count; i++)
-                    {
-                        string messageRaw = "<div>" + element[i].GetAttribute("innerHTML") + "</div>";
+                {
+                    string messageRaw = "<div>" + element[i].GetAttribute("innerHTML") + "</div>";
 
-                        RestreamChatMessage message = new RestreamChatMessage();
-                        message.SetDateToNow();
-                        message.Message = GetValueOf(messageRaw, "message-text");
-                        message.UserName = GetValueOf(messageRaw, "message-sender");
-                        message.When = GetValueOf(messageRaw, "message-time");
-                        message.SetPlatform(GetPlatformId(messageRaw));
-
-
-                        bool isMessageNew = IsMessageNew(message);
-                        if (isMessageNew)
-                        {
-
-                            if (_useDebug)
-                                Console.WriteLine("Element[" + i + "]:" + message.ToString());
-                            _lastMessages.Enqueue(message);
-                            if (_lastMessages.Count > _maxQueueSize)
-                                _lastMessages.Dequeue();
-                            if (_onMessageDetected != null)
-                                _onMessageDetected(message);
-                        }
-
-                        
-
-                    }
-
-
-
+                    RestreamChatMessage message = new RestreamChatMessage();
+                    message.SetDateToNow();
+                    message.Message = GetValueOf(messageRaw, "message-text");
+                    message.UserName = GetValueOf(messageRaw, "message-sender");
+                    message.When = GetValueOf(messageRaw, "message-time");
+                    message.SetPlatform(GetPlatformId(messageRaw));
 
                     if (_useDebug)
+                        Console.WriteLine("Element[" + i + "]:" + message.ToString());
+                    NotifyNewMessageIfNew( message);
+
+                }
+
+
+
+
+                if (_useDebug)
                         Console.WriteLine("Refresh page in " + (_maxMessageInPage - messagesFound) + " messages");
                     if (messagesFound > _maxMessageInPage)
                         driver.Navigate().Refresh();
@@ -140,6 +128,28 @@ namespace RestreamChatHacking
                 //}
              
             }
+        }
+
+        private void NotifyNewMessageIfNew( RestreamChatMessage message)
+        {
+            bool isMessageNew = IsMessageNew(message);
+            if (isMessageNew)
+            {
+
+                _lastMessages.Enqueue(message);
+                if (_lastMessages.Count > _maxQueueSize)
+                    _lastMessages.Dequeue();
+                if (_onMessageDetected != null)
+                    _onMessageDetected(message);
+            }
+        }
+
+        internal void FakeMessage(string userName, string message, RestreamChatMessage.ChatPlatform mockup)
+        {
+          RestreamChatMessage chatMessage =  new RestreamChatMessage(userName, message);
+            chatMessage.SetPlatform(mockup);
+            chatMessage.SetDateToNow();
+            NotifyNewMessageIfNew(chatMessage);
         }
 
         public bool IsMessageNew(string messageId)

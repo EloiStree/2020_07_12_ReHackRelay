@@ -35,6 +35,7 @@ namespace RestreamChatHacking
             _useDebug = useDebug;
             driver = new ChromeDriver();
             baseURL = "https://www.jams.center/";
+            driver.Manage().Window.Size =new System.Drawing.Size(10, 10);
             verificationErrors = new StringBuilder();
 
             
@@ -88,14 +89,16 @@ namespace RestreamChatHacking
 
                     RestreamChatMessage message = new RestreamChatMessage();
                     message.SetDateToNow();
-                    message.Message = GetValueOf(messageRaw, "message-text");
+                    string messageRecovered = GetValueOf(messageRaw, "message-text");
+                    messageRecovered = CutIfAskedToWantedSize(messageRecovered);
+                    message.Message = messageRecovered;
                     message.UserName = GetValueOf(messageRaw, "message-sender");
                     message.When = GetValueOf(messageRaw, "message-time");
                     message.SetPlatform(GetPlatformId(messageRaw));
 
                     if (_useDebug)
                         Console.WriteLine("Element[" + i + "]:" + message.ToString());
-                    NotifyNewMessageIfNew( message);
+                    NotifyNewMessageIfNew(message);
 
                 }
 
@@ -130,6 +133,25 @@ namespace RestreamChatHacking
             }
         }
 
+        private string CutIfAskedToWantedSize(string messageRecovered)
+        {
+            if (messageRecovered != null && !_allowAllSize)
+                messageRecovered = messageRecovered.Substring(0, _maxMessageSize);
+            return messageRecovered;
+        }
+
+        private bool _allowAllSize=true;
+        public int _maxMessageSize=1014;
+        internal void SetMaximumMessageSizeTo(int maximumMessageSize)
+        {
+            _maxMessageSize = maximumMessageSize;
+        }
+
+        internal void SetAllowingAllSize(bool allowAllSize)
+        {
+            _allowAllSize = allowAllSize;
+        }
+
         private void NotifyNewMessageIfNew( RestreamChatMessage message)
         {
             bool isMessageNew = IsMessageNew(message);
@@ -146,7 +168,8 @@ namespace RestreamChatHacking
 
         internal void FakeMessage(string userName, string message, RestreamChatMessage.ChatPlatform mockup)
         {
-          RestreamChatMessage chatMessage =  new RestreamChatMessage(userName, message);
+            message = CutIfAskedToWantedSize(message);
+            RestreamChatMessage chatMessage =  new RestreamChatMessage(userName, message);
             chatMessage.SetPlatform(mockup);
             chatMessage.SetDateToNow();
             NotifyNewMessageIfNew(chatMessage);

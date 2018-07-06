@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using static RestreamChatHacking.MessageCommunication;
+using Rug.Osc;
 
 namespace RestreamChatHacking
 {
@@ -145,6 +146,9 @@ namespace RestreamChatHacking
             public ThrowUDP(int portIn , int portOut ) {
                 _portIn = portIn;
                 _portOut = portOut;
+
+                
+                
                 try
                 {
 
@@ -156,8 +160,7 @@ namespace RestreamChatHacking
                     _receiver = new Receiver(portIn);
                 }
                 catch (Exception) { Console.WriteLine("UDP RECEIVER NOT ALLOWED"); }
-
-    }
+            }
 
     public class Receiver
             {
@@ -265,14 +268,38 @@ namespace RestreamChatHacking
     }
     public class ThrowOSC : ThrowNetwork
     {
+        
+
         public override void Send(RestreamChatMessage message)
         {
-            throw new NotImplementedException();
+            IPAddress address = IPAddress.Parse("255.255.255.255");
+            //IPAddress address = IPAddress.Parse("127.0.0.1");
+            int portOut = 2502;
+
+            using (OscSender sender = new OscSender(address, portOut))
+            {
+                try
+                {
+
+                    sender.Connect();
+                    sender.Send(new OscMessage("/RCH_Message", message.Timestamp, (int)message.Platform, message.UserName, message.Message));
+
+                }
+                catch (System.Net.Sockets.SocketException) {
+                    Console.WriteLine("ERROR ! The port "+ portOut+" is used by some an other application.");
+
+                }
+            }
+
         }
 
         public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
         {
-            throw new NotImplementedException();
+            foreach (var message in messagesGroup)
+            {
+                Send(message);
+            }
+           
         }
     }
 

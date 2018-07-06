@@ -10,6 +10,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Collections;
 using System.Net.Mail;
+using System.Threading;
 
 namespace RestreamChatHacking
 {
@@ -100,18 +101,42 @@ namespace RestreamChatHacking
             SaveConfigurationFile();
             ConfigureUserOutput();
 
+            LaunchDirtyMockupSystemOnThread();
+
             LaunchRestreamChatOberver();
+
 
             AvoidUserToQuit();
             SayGoodBye();
         }
 
+        private static void LaunchDirtyMockupSystemOnThread()
+        {
+            Thread newThread = new Thread(UseMockUData);
+            newThread.IsBackground = true;
+            newThread.Start();
+        }
+
+        private static void UseMockUData()
+        {
+            int count=0;
+            while (true) {
+                if(mockUpAccess!=null)
+                mockUpAccess.FakeMessage("MockUp Evile", "Ha ha ha " + count++,RestreamChatMessage.ChatPlatform.Mockup);
+    
+                Thread.Sleep(1000);
+            }
+
+        }
+
         private static void LaunchRestreamChatOberver()
         {
             AccessRestreamCode restreamChat = new AccessRestreamCode();
+            restreamChat.SetAllowingAllSize(!ChatHackerConfiguration.Instance.UseMaxiumMessageSize);
+            restreamChat.SetMaximumMessageSizeTo(ChatHackerConfiguration.Instance.MaximumMessageSize);
+            AddMockUpSystem(restreamChat);
             AddListenersToRestreamChat(restreamChat);
             LaunchRestreamChatObserver(restreamChat);
-            AddMockUpSystem(restreamChat);
         }
 
         private static AccessRestreamCode mockUpAccess;
@@ -311,10 +336,10 @@ namespace RestreamChatHacking
         {
             MessageCommunication.IThrow recentMessagesFile;
             MessageCommunication.IThrow allMessagesFile;
-            MessageCommunication.IThrow sendUdpMessages;
-
-            //TODO IF want store recent message in file
-            recentMessagesFile = new MessageCommunication.ThrowFile()
+            //MessageCommunication.IThrow sendUdpMessages;
+            MessageCommunication.IThrow sendOSCMessages; 
+             //TODO IF want store recent message in file
+             recentMessagesFile = new MessageCommunication.ThrowFile()
             {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding,
                 FilePath = AppData.LastMessagesPath,
@@ -330,13 +355,15 @@ namespace RestreamChatHacking
             };
 
             //TODO IF want boardcast udp message localy
-            sendUdpMessages = new MessageCommunication.ThrowUDP(ChatHackerConfiguration.Instance.UDPServerPortIn, ChatHackerConfiguration.Instance.UDPServerPortOut);
+            //sendUdpMessages = new MessageCommunication.ThrowUDP(ChatHackerConfiguration.Instance.UDPServerPortIn, ChatHackerConfiguration.Instance.UDPServerPortOut);
+            sendOSCMessages = new ThrowOSC();
+
 
             EnqueueWithMaximumBoundery(message);
 
             recentMessagesFile.Send(_lastMessages);
             allMessagesFile.Send(_lastMessages);
-            sendUdpMessages.Send(_lastMessages);
+            sendOSCMessages.Send(_lastMessages);
 
 
             // DONE BUT NEET TO BE LINKED TO EXTERNAL FILE WITH MAIL AND PASSWORD OUT OF THE GIT.
@@ -411,6 +438,23 @@ public class ChatHackerConfiguration {
     #region STORAGE INFO
     public int _maxMessagesTracked = 30;
     public int MaximumMessagesTracked { get { return _maxMessagesTracked; } }
+    #endregion
+
+    #region FILTER
+
+
+    public bool UseMaxiumMessageSize = false;
+    private int _maximumMessageSize  =1024 ;
+
+    public int MaximumMessageSize
+    {
+        get { return _maximumMessageSize; }
+        set { _maximumMessageSize = value; }
+    }
+
+
+
+
     #endregion
     #region SAVE AND LOAD
     public static string GetJson()

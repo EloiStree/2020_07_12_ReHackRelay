@@ -15,37 +15,39 @@ namespace RestreamChatHacking
 {
     public class AccessRestreamCode
     {
-        private IWebDriver driver;
-        private StringBuilder verificationErrors;
-        private string baseURL;
-        private bool acceptNextAlert = true;
+        private IWebDriver m_driver;
+        private StringBuilder m_verificationErrors;
+        private string m_baseURL;
+        private bool m_acceptNextAlert = true;
 
         public delegate void SignalMessage(RestreamChatMessage message);
-        public SignalMessage _onMessageDetected;
-        public Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>();
-        public float _maxQueueSize=300;
-        public int _maxMessageInPage = 500;//1000;
+        public SignalMessage m_onMessageDetected;
+        public Queue<RestreamChatMessage> m_lastMessages = new Queue<RestreamChatMessage>();
+        public float m_maxQueueSize=300;
+        public int m_maxMessageInPage = 500;
 
-        public int _frameTiming=250;
+        public int m_frameTiming=250;
 
-        public bool _useDebug = false;
+        public bool m_useDebug = false;
+        private bool m_allowAllSize = true;
+        public int m_maxMessageSize = 1014;
 
         public void Setup(bool useDebug )
         {
-            _useDebug = useDebug;
-            driver = new ChromeDriver();
-            baseURL = "https://www.jams.center/";
-            driver.Manage().Window.Size =new System.Drawing.Size(10, 10);
-            verificationErrors = new StringBuilder();
+            m_useDebug = useDebug;
+            m_driver = new ChromeDriver();
+            m_baseURL = "https://ko-fi.com/eloistree";
+            m_driver.Manage().Window.Size =new System.Drawing.Size(300, 200);
+            m_verificationErrors = new StringBuilder();
 
             
         }
         
-        public void Teardown()
+        public void TeardownRunningServer()
         {
             try
             {
-                driver.Quit();
+                m_driver.Quit();
             }
             catch (Exception)
             {
@@ -55,10 +57,10 @@ namespace RestreamChatHacking
 
         public void StartToListenAtRestreamEmbedUrl(string embedUrl)
         {   
-            driver.Navigate().GoToUrl(embedUrl);
+            m_driver.Navigate().GoToUrl(embedUrl);
 
             int iChecKCount = 0;
-            string firstDisplay = driver.PageSource;
+            string firstDisplay = m_driver.PageSource;
 
             //while (i > 0)
             while (true)
@@ -70,55 +72,55 @@ namespace RestreamChatHacking
 
 
 
-                    if (_useDebug)
+                    if (m_useDebug)
                         Console.WriteLine("---------------------------LOADING PAGE-------------------------");
 
-                    if (_useDebug) Console.WriteLine("################################################################");
+                    if (m_useDebug) Console.WriteLine("################################################################");
 
-                    pageCode = driver.PageSource;
-                    File.WriteAllText(Program.AppData.RestreamAppDataPath + "/Restream.html", pageCode);
-                    var element = driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));
+                    pageCode = m_driver.PageSource;
+                    //File.WriteAllText(Program.AppData.RestreamAppDataPath + "/Restream.html", pageCode);
+                    var element = m_driver.FindElements(By.XPath("//*[contains(@class, 'message-item')]"));
                     int messagesFound = element.Count;
 
-                    if (_useDebug)
+                    if (m_useDebug)
                         Console.WriteLine("Message count:" + element.Count);
 
                     for (int i = 0; i < element.Count; i++)
-                {
-                    string messageRaw = "<div>" + element[i].GetAttribute("innerHTML") + "</div>";
+                    {
+                        string messageRaw = "<div>" + element[i].GetAttribute("innerHTML") + "</div>";
 
-                    RestreamChatMessage message = new RestreamChatMessage();
-                    message.SetDateToNow();
-                    string messageRecovered = GetValueOf(messageRaw, "message-text");
-                    messageRecovered = CutIfAskedToWantedSize(messageRecovered);
-                    message.Message = messageRecovered;
-                    message.UserName = GetValueOf(messageRaw, "message-sender");
-                    message.When = GetValueOf(messageRaw, "message-time");
-                    message.SetPlatform(GetPlatformId(messageRaw));
+                        RestreamChatMessage message = new RestreamChatMessage();
+                        message.SetDateToNow();
+                        string messageRecovered = GetValueOf(messageRaw, "message-text");
+                        messageRecovered = CutIfAskedToWantedSize(messageRecovered);
+                        message.Message = messageRecovered;
+                        message.UserName = GetValueOf(messageRaw, "message-sender");
+                        message.When = GetValueOf(messageRaw, "message-time");
+                        message.SetPlatform(GetPlatformId(messageRaw));
 
-                    if (_useDebug)
-                        Console.WriteLine("Element[" + i + "]:" + message.ToString());
-                    NotifyNewMessageIfNew(message);
+                        if (m_useDebug)
+                            Console.WriteLine("Element[" + i + "]:" + message.ToString());
+                        NotifyNewMessageIfNew(message);
 
-                }
-
-
-
-
-                if (_useDebug)
-                        Console.WriteLine("Refresh page in " + (_maxMessageInPage - messagesFound) + " messages");
-                    if (messagesFound > _maxMessageInPage)
-                        driver.Navigate().Refresh();
+                    }
 
 
 
-                    if (_useDebug)
+
+                    if (m_useDebug)
+                        Console.WriteLine("Refresh page in " + (m_maxMessageInPage - messagesFound) + " messages");
+                    if (messagesFound > m_maxMessageInPage)
+                        m_driver.Navigate().Refresh();
+
+
+
+                    if (m_useDebug)
                     {
                         Console.WriteLine("");
                         Console.WriteLine("");
                     }
-                    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-                    System.Threading.Thread.Sleep(_frameTiming);
+                    m_driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+                    System.Threading.Thread.Sleep(m_frameTiming);
                     //i--;
 
                 //}
@@ -135,21 +137,19 @@ namespace RestreamChatHacking
 
         private string CutIfAskedToWantedSize(string messageRecovered)
         {
-            if (messageRecovered != null && !_allowAllSize)
-                messageRecovered = messageRecovered.Substring(0, _maxMessageSize);
+            if (messageRecovered != null && !m_allowAllSize)
+                messageRecovered = messageRecovered.Substring(0, m_maxMessageSize);
             return messageRecovered;
         }
 
-        private bool _allowAllSize=true;
-        public int _maxMessageSize=1014;
-        internal void SetMaximumMessageSizeTo(int maximumMessageSize)
+        public void SetMaximumMessageSizeTo(int maximumMessageSize)
         {
-            _maxMessageSize = maximumMessageSize;
+            m_maxMessageSize = maximumMessageSize;
         }
 
-        internal void SetAllowingAllSize(bool allowAllSize)
+        public void SetAllowingAllSize(bool allowAllSize)
         {
-            _allowAllSize = allowAllSize;
+            m_allowAllSize = allowAllSize;
         }
 
         private void NotifyNewMessageIfNew( RestreamChatMessage message)
@@ -158,15 +158,15 @@ namespace RestreamChatHacking
             if (isMessageNew)
             {
 
-                _lastMessages.Enqueue(message);
-                if (_lastMessages.Count > _maxQueueSize)
-                    _lastMessages.Dequeue();
-                if (_onMessageDetected != null)
-                    _onMessageDetected(message);
+                m_lastMessages.Enqueue(message);
+                if (m_lastMessages.Count > m_maxQueueSize)
+                    m_lastMessages.Dequeue();
+                if (m_onMessageDetected != null)
+                    m_onMessageDetected(message);
             }
         }
 
-        internal void FakeMessage(string userName, string message, RestreamChatMessage.ChatPlatform mockup)
+        public void FakeMessage(string userName, string message, ChatPlatform mockup)
         {
             message = CutIfAskedToWantedSize(message);
             RestreamChatMessage chatMessage =  new RestreamChatMessage(userName, message);
@@ -175,40 +175,43 @@ namespace RestreamChatHacking
             NotifyNewMessageIfNew(chatMessage);
         }
 
-        public bool IsMessageNew(string messageId)
-        {
-            var result = _lastMessages.Where(p => p.Message == messageId);
-            return result.Count() <= 0;
-        }
+        //public bool IsMessageNew(string messageId)
+        //{
+        //    var result = m_lastMessages.Where(p => p.Message == messageId);
+        //    return result.Count() <= 0;
+        //}
         public bool IsMessageNew(RestreamChatMessage messageId)
         {
-            var result = _lastMessages.Where(p => p.Equals(messageId));
+            var result = m_lastMessages.Where(p => p.Equals(messageId));
             return result.Count() <= 0;
         }
 
-        private static  int GetNumberIn(string text)
+        private static ChatPlatform GetNumberIn(string text)
         {
-            if (string.IsNullOrEmpty(text))
-                return (int) RestreamChatMessage.ChatPlatform.Unknow;
-            return Int32.Parse(Regex.Match(text, @"\d+").Value);
+            text = text.ToLower();
+            if ( text.IndexOf("restream-icon-orange.svg") >=0)
+                return ChatPlatform.Restream;
+            if ( text.IndexOf("platform-1001.png") >= 0)
+                return ChatPlatform.Discord;
+            if (text.IndexOf("platform-37.png") >= 0)
+                return ChatPlatform.Facebook;
+            if (text.IndexOf("platform-38.png") >= 0)
+                return ChatPlatform.Periscope;
+            if (text.IndexOf("platform-57.png") >= 0)
+                return ChatPlatform.DLive;
+            //if (text.IndexOf("platform-xxx.png") >= 0)
+            //    return RestreamChatMessage.ChatPlatform.LinkedIn;
+            if ( text.IndexOf("platform-1.png") >= 0)
+                return ChatPlatform.Twitch;
+            if (text.IndexOf("platform-25.png") >= 0 ||
+                text.IndexOf("platform-5.png") >= 0)
+                return ChatPlatform.Youtube;
+            return ChatPlatform.Unknow;
         }
 
         private static string GetValueOf(string messageRaw, string attribute)
         {
-
-
-            //string[] images;
-            //if(Find(messageRaw, out images));
-            //{
-            //    foreach (var image in images)
-            //    {
-            //        string url = FindUrlInImage(image);
-            //        messageRaw.Replace(image, "![img]("+url+")");
-            //    }
-            //}
-
             string messageRawWithoutImage = RemoveImagesFrom(messageRaw,"");
-
 
             try
             {
@@ -236,20 +239,28 @@ namespace RestreamChatHacking
             }
         }
 
-        private static int GetPlatformId(string messageRaw)
+        private static ChatPlatform GetPlatformId(string messageRaw)
         {
             string messageRawWithoutImage = RemoveImagesFrom(messageRaw, "");
-            
-            var xPathDoc = new XPathDocument(new StringReader(messageRaw));
-            var nav = xPathDoc.CreateNavigator();
-            var sender = nav.Select("//*[contains(@class, 'icon-platform')]");
-            sender.MoveNext();
-            sender.Current.MoveToFirstAttribute();
-            return GetNumberIn(sender.Current.Value);
+            return GetNumberIn(messageRaw);
+            //
+            ///"<div><div class=\"message-info\">
+            /// <img class=\"icon-platform\" alt=\"Restream.io\" src=\"/assets/icon-platform/restream-icon-orange.svg\">
+            /// <span class=\"message-sender\"><span></span>Restream.io</span>
+            /// <div class=\"message-time\">21:23:13</div></div>
+            /// <div class=\"message-text\"><span class=\"jss8\">The chat is ready to display messages.</span> </div>
+            ///</div>"
+            //var xPathDoc = new XPathDocument(new StringReader(messageRawWithoutImage));
+            //var nav = xPathDoc.CreateNavigator();
+            //var sender = nav.Select("//*[contains(@class, 'message-sender')]");
+            //sender.MoveNext();
+            ////sender.Current.MoveToFirstAttribute();
+            //return GetNumberIn(sender.Current.Value);
         }
 
         public static string urlInSrcPatter = "src\\s*=\\s*\"(.+?)\"";
-        public static string htmlImageTagPattern = "<img\\s[^>]*?src\\s*=\\s*['\\\"]([^'\\\"]*?)['\\\"][^>]*?>";
+//        public static string htmlImageTagPattern = "<img\\s[^>]*?src\\s*=\\s*['\\\"]([^'\\\"]*?)['\\\"][^>]*?>";
+        public static string htmlImageTagPattern = "<img[^>]*>";
         private static string RemoveImagesFrom(string messageRaw,string replacement="[img]")
         {
             
@@ -271,7 +282,7 @@ namespace RestreamChatHacking
         {
             try
             {
-                driver.FindElement(by);
+                m_driver.FindElement(by);
                 return true;
             }
             catch (NoSuchElementException)
@@ -284,7 +295,7 @@ namespace RestreamChatHacking
         {
             try
             {
-                driver.SwitchTo().Alert();
+                m_driver.SwitchTo().Alert();
                 return true;
             }
             catch (NoAlertPresentException)
@@ -297,9 +308,9 @@ namespace RestreamChatHacking
         {
             try
             {
-                IAlert alert = driver.SwitchTo().Alert();
+                IAlert alert = m_driver.SwitchTo().Alert();
                 string alertText = alert.Text;
-                if (acceptNextAlert)
+                if (m_acceptNextAlert)
                 {
                     alert.Accept();
                 }
@@ -311,7 +322,7 @@ namespace RestreamChatHacking
             }
             finally
             {
-                acceptNextAlert = true;
+                m_acceptNextAlert = true;
             }
         }
     }

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Newtonsoft;
-using Newtonsoft.Json;
+using UnityEngine;
 
 namespace RestreamChatHacking
 {
@@ -21,68 +20,72 @@ namespace RestreamChatHacking
             Platform = ChatPlatform.Unknow;
         }
 
-        [JsonIgnore]
+        
         public string Id
         {
             get { return Timestamp + "|" + UserName; }
         }
-        private string m_message;
+        [SerializeField] string m_message;
 
         public string Message
         {
             get { return m_message; }
             set { m_message = value; }
         }
-        
-        private string m_userName;
+
+        [SerializeField] string m_userName;
 
         public string UserName
         {
             get { return m_userName; }
             set { m_userName = value; }
         }
-        
-        private string m_when;
+
+        [SerializeField] string m_when;
 
         public string When
         {
             get { return m_when; }
             set { m_when = value; }
         }
-        
-        private string m_date;
+
+        [SerializeField] string m_date;
 
         public string Date
         {
             get { return m_date; }
             set { m_date = value; }
         }
-        public DateTime GetWhenAsDateTime() { 
-            return DateTime.ParseExact(Date+When, "yyyy-MM-ddhh:mm:ss", CultureInfo.InvariantCulture); }
+        public DateTime GetWhenAsDateTime()
+        {
+            return DateTime.ParseExact(Date + When, "yyyy-MM-ddhh:mm:ss", CultureInfo.InvariantCulture);
+        }
         public bool IsDateDefined() { return !string.IsNullOrEmpty(m_date); }
         public void SetDateToNow()
         {
             Date = DateTime.Now.ToString("yyyy-MM-dd");
             When = DateTime.Now.ToString("hh:mm:ss");
         }
-        [JsonIgnore]
-        public double Timestamp { get { return (new DateTime(Year,Month,Day,Hour,Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }
-
-        public string GetAsOneLiner() { 
         
-        return string.Format("RCM¦{0}¦{1}¦{2}¦{3}¦{4}¶",
-                   Date, When, UserName, Platform, Message);
+        public double Timestamp { get { return (new DateTime(Year, Month, Day, Hour, Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }
+
+        public string GetAsOneLiner()
+        {
+
+            return string.Format("RCM¦{0}¦{1}¦{2}¦{3}¦{4}¶",
+                       Date, When, UserName, Platform, Message);
         }
         public void SetWithOneLiner(string text)
         {
-           text= text.Trim();
-            if (text.IndexOf("RCM¦") == 0 &&
-                text[text.Length - 1] == '¶')
+           // Debug.Log(">" + text+ "<"   );
+            text = text.Trim();
+            if (!(text.IndexOf("RCM¦") == 0 &&
+                text[text.Length - 1] == '¶'))
                 return;
             text = text.Substring(4);
             text = text.Substring(0, text.Length - 1);
-            string[] token = text.Split('■');
-            if (token.Length != 5) 
+            string[] token = text.Split('¦');
+            if (token.Length != 5)
                 return;
             Date = token[0];
             When = token[1];
@@ -93,7 +96,8 @@ namespace RestreamChatHacking
 
         private ChatPlatform GetEnumOf(string text)
         {
-            try {
+            try
+            {
                 ChatPlatform platform;
                 if (Enum.TryParse(text, out platform))
                     return platform;
@@ -102,7 +106,7 @@ namespace RestreamChatHacking
             catch (Exception) { return ChatPlatform.Unknow; }
         }
 
-      
+        
         private ChatPlatform m_platformId;
 
         public ChatPlatform Platform
@@ -111,24 +115,26 @@ namespace RestreamChatHacking
             set { m_platformId = value; }
         }
 
-        [JsonIgnore]
+        
         public int Year { get { return int.Parse(Date.Substring(0, 4)); } }
-        [JsonIgnore]
+        
         public int Month { get { return int.Parse(Date.Substring(5, 2)); } }
-        [JsonIgnore]
+        
         public int Day { get { return int.Parse(Date.Substring(8, 2)); } }
-        [JsonIgnore]
+        
         public int Hour { get { return int.Parse(Date.Substring(0, 2)); } }
-        [JsonIgnore]
+        
         public int Minute { get { return int.Parse(Date.Substring(2, 2)); } }
-        [JsonIgnore]
+        
         public int Second { get { return int.Parse(Date.Substring(5, 2)); } }
+
+        public UserIdentifier UserID { get { return new UserIdentifier(m_platformId, m_userName); } }
 
         public void SetPlatform(ChatPlatform platform)
         {
             m_platformId = platform;
         }
-       
+
 
         public override string ToString()
         {

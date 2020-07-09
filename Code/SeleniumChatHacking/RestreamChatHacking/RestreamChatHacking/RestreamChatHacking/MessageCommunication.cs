@@ -27,43 +27,51 @@ namespace RestreamChatHacking
         public interface IThrow
         {
 
-            void Send(RestreamChatMessage message);
-            void Send(IEnumerable<RestreamChatMessage> messagesGroup);
+            void SendChatMessage(RestreamChatMessage message);
+            void SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup);
         }
 
         public class ThrowFile : IThrow
         {
             public bool UseRelativePath { get; set; }
-            private string _filePath;
+            private string m_filePath;
 
             public string FilePath
             {
-                get { return _filePath; }
-                set { _filePath = value; }
+                get { return m_filePath; }
+                set { m_filePath = value; }
             }
             public enum WriteType { Overriding, Appending }
             public WriteType WriteBy { get; set; }
 
-            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
+            public void SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 Write(ConvertToJson(messagesGroup));
             }
 
-            public void Send(RestreamChatMessage message)
+            public void SendChatMessage(RestreamChatMessage message)
             {
                 Write(ConvertToJson(message));
             }
             public void Write(string json)
             {
-                string path = UseRelativePath ? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/" + _filePath : _filePath;
+                string path = UseRelativePath ? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/" + m_filePath : m_filePath;
 
                 if (WriteBy == WriteType.Overriding)
                 {
-                    File.WriteAllText(path, json);
+                    try
+                    {
+                        File.WriteAllText(path, json);
+                    }
+                    catch (Exception) { }
                 }
                 else if (WriteBy == WriteType.Appending)
                 {
-                    File.AppendAllText(path, json);
+                    try
+                    {
+                        File.AppendAllText(path, json);
+                    }
+                    catch (Exception) { }
 
                 }
 
@@ -74,31 +82,31 @@ namespace RestreamChatHacking
         public class ThrowGoogleMail : IThrow
         {
 
-            private string _password;
+            private string m_password;
 
             public string Password
             {
-                get { return _password; }
-                set { _password = value; }
+                get { return m_password; }
+                set { m_password = value; }
             }
 
 
-            private string _targetMail;
+            private string m_targetMail;
 
             public string TargetMail
             {
-                get { return _targetMail; }
-                set { _targetMail = value; }
+                get { return m_targetMail; }
+                set { m_targetMail = value; }
             }
-            private string _yourMail;
+            private string m_yourMail;
 
             public string YourMail
             {
-                get { return _yourMail; }
-                set { _yourMail = value; }
+                get { return m_yourMail; }
+                set { m_yourMail = value; }
             }
 
-            public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
+            public void SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup)
             {
                 string msgContent = "";
                 foreach (RestreamChatMessage msg in messagesGroup)
@@ -108,7 +116,7 @@ namespace RestreamChatHacking
                 SendMailByGoogle(msgContent);
             }
 
-            public void Send(RestreamChatMessage message)
+            public void SendChatMessage(RestreamChatMessage message)
             {
                 SendMailByGoogle(message.ToString());
             }
@@ -122,7 +130,7 @@ namespace RestreamChatHacking
                 client.Timeout = 10000;
                 client.DeliveryMethod = SmtpDeliveryMethod.Network;
                 client.UseDefaultCredentials = false;
-                client.Credentials = new System.Net.NetworkCredential(YourMail, _password);
+                client.Credentials = new System.Net.NetworkCredential(YourMail, m_password);
 
                 MailMessage mm = new MailMessage(YourMail, TargetMail);
                 mm.Subject = "Restream Tchat participants";
@@ -135,212 +143,216 @@ namespace RestreamChatHacking
             }
         }
 
-        public class ThrowUDP : IThrow
+    }
+    public class ThrowUDP : IThrow
+    {
+        public string m_address;
+        public int m_portOut = 2512;
+        //public int m_portIn = 2511;
+
+        public Sender m_sender=null;
+        //public Receiver _receiver;
+
+        public ThrowUDP(string address, int portOut)
         {
-            public int _portIn = 2501;
-            public int _portOut = 2502;
+            //  m_portIn = portIn;
+            m_address = address;
+            m_portOut = portOut;
 
-            public Sender _sender;
-            public Receiver _receiver;
-            
-            public ThrowUDP(int portIn , int portOut ) {
-                _portIn = portIn;
-                _portOut = portOut;
-
-                
-                
-                try
-                {
-
-                    _sender = new Sender(portOut);
-                }
-                catch (Exception) { Console.WriteLine("UDP SENDER NOT ALLOWED"); }
-                try
-                {
-                    _receiver = new Receiver(portIn);
-                }
-                catch (Exception) { Console.WriteLine("UDP RECEIVER NOT ALLOWED"); }
-            }
-
-    public class Receiver
+            try
             {
-                private int _usedPort;
-                public Receiver(int port) {
-                    _usedPort= port ;
-                    udp = new UdpClient(_usedPort);
-                    StartListening();
-                }
 
-                private readonly UdpClient udp;
-                private void StartListening()
-                {
-                    this.udp.BeginReceive(Receive, new object());
-                }
-                private void Receive(IAsyncResult ar)
-                {
-                    IPEndPoint ip = new IPEndPoint(IPAddress.Any, _usedPort);
-                    byte[] bytes = udp.EndReceive(ar, ref ip);
-                    string message = Encoding.ASCII.GetString(bytes);
-                    StartListening();
-                }
+                m_sender = new Sender(address,portOut);
             }
+            catch (Exception) { Console.WriteLine("UDP SENDER NOT ALLOWED"); }
+        }
+        //void SendMessage(IEnumerable<RestreamChatMessage> messagesGroup)
+        //{
+        //    foreach (var message in messagesGroup)
+        //    {
+        //        this.SendMessage(message);
+        //    }
 
-            public class Sender
+        //}
+
+        void SendMessage(RestreamChatMessage message)
+        {
+            Console.WriteLine("UDP -> " + message);
+            if (m_sender != null && message != null)
+                m_sender.Send(message.GetAsOneLiner());
+        }
+
+        public string CompressedMessage(RestreamChatMessage msg)
+        {
+            //To Change later to a really compressed string
+            return msg.ToString();
+        }
+
+        void IThrow.SendChatMessage(RestreamChatMessage message)
+        {
+            SendMessage(message);
+        }
+
+        void IThrow.SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup)
+        {
+            throw new Exception();
+          //  SendMessage(messagesGroup);
+        }
+
+        public class Receiver
+        {
+            private int _usedPort;
+            public Receiver(int port)
             {
-                public int _usedPort;
-                public Sender(int port)
-                {
-                    _usedPort= port ;
-                }
-                public void Send(string message)
-                {
-                    UdpClient client = new UdpClient();
-                    IPEndPoint ip = new IPEndPoint(IPAddress.Broadcast, _usedPort);
-                    byte[] bytes = Encoding.ASCII.GetBytes(message);
-                    client.Send(bytes, bytes.Length, ip);
-                    client.Close();
-                }
-
-                public void Ping()
-                {
-                    Send("Ping");
-                }
+                _usedPort = port;
+                udp = new UdpClient(_usedPort);
+                StartListening();
             }
 
-
-            void IThrow.Send(IEnumerable<RestreamChatMessage> messagesGroup)
+            private readonly UdpClient udp;
+            private void StartListening()
             {
-                foreach (var message in messagesGroup)
-                {
-                    Console.WriteLine("UDP "+ _sender._usedPort + " -> " + message);
-                    _sender.Send(CompressedMessage(message));
-                }
+                this.udp.BeginReceive(Receive, new object());
             }
-
-            void IThrow.Send(RestreamChatMessage message)
+            private void Receive(IAsyncResult ar)
             {
-                Console.WriteLine("UDP -> "+message);
-                _sender.Send(CompressedMessage(message));
-            }
-
-            public string CompressedMessage(RestreamChatMessage msg) {
-                //To Change later to a really compressed string
-                return msg.ToString();
+                IPEndPoint ip = new IPEndPoint(IPAddress.Any, _usedPort);
+                byte[] bytes = udp.EndReceive(ar, ref ip);
+                string message = Encoding.Unicode.GetString(bytes);
+                StartListening();
             }
         }
+
+        public class Sender : IDisposable
+        {
+            public string m_address;
+            public int m_usedPort;
+            public UdpClient m_client;
+            public IPEndPoint ip;
+            public Sender(string address, int port)
+            {
+                m_address = address;
+                m_usedPort = port;
+                IPAddress ipa = string.IsNullOrEmpty(m_address) ? IPAddress.Broadcast : IPAddress.Parse(m_address);
+                ip = new IPEndPoint(ipa, m_usedPort);
+                m_client = new UdpClient();
+                //m_client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                m_client.Connect(ip);
+            }
+            public void Send(string message)
+            {
+                byte[] bytes = Encoding.Unicode.GetBytes(message);
+                m_client.Send(bytes, bytes.Length);
+
+            }
+            public void Dispose()
+            {
+                m_client.Close();
+            }
+
+            public void Ping()
+            {
+                Send("Ping");
+            }
+        }
+
+
+        
     }
     #region TO DO LATER
-    public class ThrowWebPage : IThrow
-    {
+    //public class ThrowWebPage : IThrow
+    //{
 
-        private string _pageToCall;
-        public string PageToCall
-        {
-            get { return _pageToCall; }
-            set { _pageToCall = value; }
-        }
+    //    private string _pageToCall;
+    //    public string PageToCall
+    //    {
+    //        get { return _pageToCall; }
+    //        set { _pageToCall = value; }
+    //    }
 
-        public enum CommunicationType { GET, POST }
-        public CommunicationType Communication { get; set; }
+    //    public enum CommunicationType { GET, POST }
+    //    public CommunicationType Communication { get; set; }
 
-        public void Send(RestreamChatMessage message)
-        {
-            throw new NotImplementedException();
-        }
+    //    public void SendChatMessage(RestreamChatMessage message)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
 
-        public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    public void SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 
     #region NETWORK
 
-    public abstract class ThrowNetwork : IThrow
+    public abstract class ThrowNetwork : IThrow, IDisposable
     {
 
         public string Addresse { get; set; }
-        public int PortIn { get; set; }
         public int PortOut { get; set; }
 
-        public abstract void Send(IEnumerable<RestreamChatMessage> messagesGroup);
-        public abstract void Send(RestreamChatMessage message);
+        public abstract void CreateNetwork();
+        public abstract void DestroyNetwork();
+
+        public ThrowNetwork(string address, int port) {
+            PortOut = port;
+            Addresse = address;
+            CreateNetwork();
+        }
+
+        public void Dispose()
+        {
+            DestroyNetwork();
+        }
+
+        public abstract void SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup);
+        public abstract void SendChatMessage(RestreamChatMessage message);
     }
     public class ThrowOSC : ThrowNetwork
     {
-        
 
-        public override void Send(RestreamChatMessage message)
+        public ThrowOSC(string address, int port) : base(address, port) { }
+
+        OscSender sender;
+        public override void CreateNetwork()
         {
-            IPAddress address = IPAddress.Parse("255.255.255.255");
-            //IPAddress address = IPAddress.Parse("127.0.0.1");
-            int portOut = 2502;
-
-            using (OscSender sender = new OscSender(address, portOut))
-            {
-                try
-                {
-
-                    sender.Connect();
-                    sender.Send(new OscMessage("/RCH_Message", message.Timestamp, (int)message.Platform, message.UserName, message.Message));
-
-                }
-                catch (System.Net.Sockets.SocketException) {
-                    Console.WriteLine("ERROR ! The port "+ portOut+" is used by some an other application.");
-
-                }
-            }
-
+            IPAddress address = IPAddress.Broadcast;
+            if (!string.IsNullOrEmpty(Addresse)) 
+                address = IPAddress.Parse(Addresse);
+            sender = new OscSender(address, base.PortOut);
+            sender.Connect();
         }
 
-        public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
+        public override void DestroyNetwork()
+        {
+            if(sender!=null)
+                sender.Close();
+        }
+
+        public override void SendChatMessage(RestreamChatMessage message)
+        {
+                try
+                {
+                    sender.Send(new OscMessage("/RCH_Message", message.GetAsOneLiner()));
+                }
+                catch (System.Net.Sockets.SocketException) {
+                    Console.WriteLine("ERROR ! The port "+ PortOut+" is used by some an other application.");
+
+                }
+        }
+
+        public override void SendChatMessage(IEnumerable<RestreamChatMessage> messagesGroup)
         {
             foreach (var message in messagesGroup)
             {
-                Send(message);
+                SendChatMessage(message);
             }
            
         }
     }
 
-    public class ThrowUDP : ThrowNetwork
-    {
-        public override void Send(RestreamChatMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public class ThrowTCP : ThrowNetwork
-    {
-        public override void Send(RestreamChatMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class ThrowWebSocket : IThrow
-    {
-        public void Send(IEnumerable<RestreamChatMessage> messagesGroup)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Send(RestreamChatMessage message)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
+   
     #endregion
     #endregion
 }

@@ -56,8 +56,8 @@ namespace RestreamChatHacking
         }
         public static void CreateRestreamConfigFile()
         {
-            if(!File.Exists(AppData.ConfigurationPath))
-                File.Create(AppData.ConfigurationPath);
+            if (!File.Exists(AppData.ConfigurationPath))
+                SaveConfigurationFile();
         }
         public static void SaveConfigurationFile()
         {
@@ -95,12 +95,12 @@ namespace RestreamChatHacking
             CheckForFilesPresence();
             LoadConfigurationFile();
             HelloWorldAndCredit();
-
             string answer = "";
             AskForRestreamEmbedLink();
             SaveConfigurationFile();
             ConfigureUserOutput();
 
+            if (ChatHackerConfiguration.Instance.m_sendMockingMessages)
             LaunchDirtyMockupSystemOnThread();
 
             LaunchRestreamChatOberver();
@@ -110,6 +110,7 @@ namespace RestreamChatHacking
             SayGoodBye();
         }
 
+      
         private static void LaunchDirtyMockupSystemOnThread()
         {
             Thread newThread = new Thread(UseMockUData);
@@ -122,7 +123,7 @@ namespace RestreamChatHacking
             int count=0;
             while (true) {
                 if(mockUpAccess!=null)
-                mockUpAccess.FakeMessage("MockUp Evile", "Ha ha ha " + count++,RestreamChatMessage.ChatPlatform.Mockup);
+                mockUpAccess.FakeMessage("MockUp User", "Ha ha ha " + count++,ChatPlatform.Mockup);
     
                 Thread.Sleep(1000);
             }
@@ -132,7 +133,8 @@ namespace RestreamChatHacking
         private static void LaunchRestreamChatOberver()
         {
             AccessRestreamCode restreamChat = new AccessRestreamCode();
-            restreamChat.SetAllowingAllSize(!ChatHackerConfiguration.Instance.UseMaxiumMessageSize);
+            restreamChat.m_useDebug = true;
+            restreamChat.SetAllowingAllSize(!ChatHackerConfiguration.Instance.m_useMaxiumMessageSize);
             restreamChat.SetMaximumMessageSizeTo(ChatHackerConfiguration.Instance.MaximumMessageSize);
             AddMockUpSystem(restreamChat);
             AddListenersToRestreamChat(restreamChat);
@@ -149,19 +151,19 @@ namespace RestreamChatHacking
         {
             d.Setup(false);
             d.StartToListenAtRestreamEmbedUrl(ChatHackerConfiguration.Instance.GetRestreamChatURL());
-            d.Teardown();
+            d.TeardownRunningServer();
         }
 
         private static void AddListenersToRestreamChat(AccessRestreamCode d)
         {
             // Save in files
-            d._onMessageDetected += SaveMessagesToFiles;
+            d.m_onMessageDetected += ThrowMessageToListeners;
             // Launch server from the chat
-            d._onMessageDetected += LaunchStreaming;
+            d.m_onMessageDetected += LaunchStreaming;
             // Stop server from the chat
-            d._onMessageDetected += StopStreaming;
+            d.m_onMessageDetected += StopStreaming;
             // Debug incoming message
-            d._onMessageDetected += DisplayMessage;
+            d.m_onMessageDetected += DisplayMessage;
         }
 
         private static void SayGoodBye()
@@ -177,7 +179,7 @@ namespace RestreamChatHacking
 
                 Console.WriteLine("Press any key to leave...");
                 answer = Console.ReadLine();
-                mockUpAccess.FakeMessage("RestreamHacking", answer, RestreamChatMessage.ChatPlatform.Mockup);
+                mockUpAccess.FakeMessage("RestreamHacking", answer, ChatPlatform.Mockup);
 
 
             }
@@ -223,21 +225,25 @@ namespace RestreamChatHacking
         {
             ///HELLO
             Console.Out.WriteLine("#######################################################");
-            Console.Out.WriteLine("######  Hello & welcome to Restream Chat Hacker  ######");
+            Console.Out.WriteLine("######  Hello & welcome to Restream Chat Relay  ######");
             Console.Out.WriteLine("#######################################################");
             Console.Out.WriteLine("> Config stored in " + AppData.RestreamAppDataPath);
             Console.Out.WriteLine("> Last messages stored in " + AppData.LastMessagesPath);
             Console.Out.WriteLine("> All messages stored in " + AppData.AllMessagesPath);
-            Console.Out.WriteLine("> Code GitHub & Manual: " + "https://github.com/JamsCenter/2017_12_23_RestreamChatHacking");
-            Console.Out.WriteLine("> Issue to report: " + "https://github.com/JamsCenter/2017_12_23_RestreamChatHacking/issues");
-            Console.Out.WriteLine("> License: " + "https://github.com/JamsCenter/2017_12_23_RestreamChatHacking/wiki/License");
-            Console.Out.WriteLine("> Credit: " + "Strée Eloi - http://jams.center");
+            Console.Out.WriteLine("> Code GitHub & Manual: " + "https://gitlab.com/eloistree/2017_12_23_RestreamChatHacking");
+            Console.Out.WriteLine("> Issue to report: " + "https://eloistree.page.link/discord");
+            Console.Out.WriteLine("> License: " + "https://gist.github.com/EloiStree/b4e1520d068c23af7234755036adc170");
+            Console.Out.WriteLine("> Credit: " + "Strée Eloi - https://ko-fi.com/eloistree");
             Console.Out.WriteLine("#######################################################");
 
             Console.Out.WriteLine(" ");
             Console.Out.WriteLine(" ");
             Console.Out.WriteLine(" ");
         }
+
+      
+
+
 
         private static void AskForRestreamEmbedLink()
         {
@@ -309,76 +315,106 @@ namespace RestreamChatHacking
 
         private static void LaunchStreaming (RestreamChatMessage message)
         {
-            if (message.Message.Contains("!startstreaming"))
+            if (ChatHackerConfiguration.Instance.m_allowSteamLaunchingFromChat) { 
+            if (message.Message.Contains(ChatHackerConfiguration.Instance.m_startStreamKeyword ))
             {
 
                 Console.WriteLine("Action: Try to launch streaming");
                 System.Diagnostics.Process.Start(Environment.CurrentDirectory + "\\StartStreaming.bat");
 
             }
+            }
         }
 
         private static void StopStreaming(RestreamChatMessage message)
         {
-            if (message.Message.Contains("!stopstreaming"))
+            if (ChatHackerConfiguration.Instance.m_allowSteamKillingFromChat)
+            {
+               
+            if (message.Message.Contains(ChatHackerConfiguration.Instance.m_killStreamWord ))
             {
                 Console.WriteLine("Action: Try to stop streaming");
                 System.Diagnostics.Process.Start(Environment.CurrentDirectory + "\\StopStreaming.bat");
 
             }
+            }
         }
 
 
-        
 
-        private static Queue<RestreamChatMessage> _lastMessages = new Queue<RestreamChatMessage>();
-        private static void SaveMessagesToFiles(RestreamChatMessage message)
+        private static MessageCommunication.IThrow recentMessagesFile = null;
+        private static MessageCommunication.IThrow allMessagesFile = null;
+        private static MessageCommunication.IThrow sendOSCMessages = null;
+        private static MessageCommunication.IThrow [] sendUDPListeners = null;
+        private static Queue<RestreamChatMessage> m_lastMessages = new Queue<RestreamChatMessage>();
+        private static void ThrowMessageToListeners(RestreamChatMessage message)
         {
-            MessageCommunication.IThrow recentMessagesFile;
-            MessageCommunication.IThrow allMessagesFile;
-            //MessageCommunication.IThrow sendUdpMessages;
-            MessageCommunication.IThrow sendOSCMessages; 
-             //TODO IF want store recent message in file
-             recentMessagesFile = new MessageCommunication.ThrowFile()
+           
+           
+           
+           
+            if (recentMessagesFile ==null &&
+                ChatHackerConfiguration.Instance.m_useLastMessagesFile)
+                recentMessagesFile = new MessageCommunication.ThrowFile()
             {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Overriding,
                 FilePath = AppData.LastMessagesPath,
                 UseRelativePath = false
             };
 
-            //TODO IF want store all messages in file
-            allMessagesFile = new MessageCommunication.ThrowFile()
+            if (allMessagesFile == null &&
+                ChatHackerConfiguration.Instance.m_useAllMessagesFile)
+                allMessagesFile = new MessageCommunication.ThrowFile()
             {
                 WriteBy = MessageCommunication.ThrowFile.WriteType.Appending,
                 FilePath = AppData.AllMessagesPath,
                 UseRelativePath = false
             };
 
-            //TODO IF want boardcast udp message localy
-            //sendUdpMessages = new MessageCommunication.ThrowUDP(ChatHackerConfiguration.Instance.UDPServerPortIn, ChatHackerConfiguration.Instance.UDPServerPortOut);
-            sendOSCMessages = new ThrowOSC();
+             if(sendOSCMessages == null &&
+                ChatHackerConfiguration.Instance.m_useOsc)
+            sendOSCMessages = new ThrowOSC(
+                ChatHackerConfiguration.Instance.m_oscAddress,
+                ChatHackerConfiguration.Instance.m_oscPort );
 
+            if (sendUDPListeners == null &&
+                ChatHackerConfiguration.Instance.m_useUdp) {
+                string[] ips = ChatHackerConfiguration.Instance.m_udpAddressListeners;
+                sendUDPListeners = new MessageCommunication.IThrow[ips.Length];
+                for (int i = 0; i < ips.Length; i++)
+                {
+                    sendUDPListeners[i] = new ThrowUDP(
+                    ips[i],
+                    ChatHackerConfiguration.Instance.m_udpPort);
+                }
+                
+            }
 
             EnqueueWithMaximumBoundery(message);
 
-            recentMessagesFile.Send(_lastMessages);
-            allMessagesFile.Send(_lastMessages);
-            sendOSCMessages.Send(_lastMessages);
+            if (recentMessagesFile != null)
+                recentMessagesFile.SendChatMessage(message);
+            if (allMessagesFile != null)
+                allMessagesFile.SendChatMessage(message);
+            if (sendOSCMessages != null)
+                sendOSCMessages.SendChatMessage(message);
+            if (sendUDPListeners != null)
+            {
+                for (int i = 0; i < sendUDPListeners.Length; i++)
+                {
+                    sendUDPListeners[i].SendChatMessage(message);
+                }
+            }
 
 
-            // DONE BUT NEET TO BE LINKED TO EXTERNAL FILE WITH MAIL AND PASSWORD OUT OF THE GIT.
-            //  if (message.Message.Contains("JamsCenter")) {
-            //      mailMeIfTagged.Send(message);
-            //  }
         }
 
         private static void EnqueueWithMaximumBoundery(RestreamChatMessage message)
         {
-            while (_lastMessages.Count > ChatHackerConfiguration.Instance.MaximumMessagesTracked)
-                _lastMessages.Dequeue();
-            _lastMessages.Enqueue(message);
+            while (m_lastMessages.Count > ChatHackerConfiguration.Instance.MaximumMessagesTracked)
+                m_lastMessages.Dequeue();
+            m_lastMessages.Enqueue(message);
         }
-        //<--BAD CODE CHANGE LATER
 
     }
    
@@ -396,60 +432,55 @@ public class ChatHackerConfiguration {
 
     }
 
-    private Debug _debug;
+    private Debug m_debug;
     public Debug DebugOption { get {
-            if (_debug == null)
-                _debug = new Debug();
-            return _debug;
+            if (m_debug == null)
+                m_debug = new Debug();
+            return m_debug;
         }
     }
     #region RESTREAM IRC
-    public bool IsRestreamDefined() { return !string.IsNullOrEmpty(_restreamEmbedURL); }
-    public string GetRestreamChatURL() { return _restreamEmbedURL; }
-    public string _restreamEmbedURL;
+    public bool IsRestreamDefined() { return !string.IsNullOrEmpty(m_restreamEmbedURL); }
+    public string GetRestreamChatURL() { return m_restreamEmbedURL; }
+    public string m_restreamEmbedURL;
     #endregion
 
-    #region UDP SERVER
-    private int _udpServerPortIn= 2501;
 
-    public int UDPServerPortIn
-    {
-        get { return _udpServerPortIn; }
-        set { _udpServerPortIn = value; }
-    }
-    private int _udpServerPortOut=2502;
+    //#region FACEBOOK LINKS
+    //public bool IsFacebookPostDefined() { return _facebookPostURL.Length > 0; }
+    //public string [] GetFacebokPostURL() { return _facebookPostURL; }
+    //public string [] _facebookPostURL;
 
-    public int UDPServerPortOut
-    {
-        get { return _udpServerPortOut; }
-        set { _udpServerPortOut = value; }
-    }
-
-
-    #endregion
-
-    #region FACEBOOK LINKS
-    public bool IsFacebookPostDefined() { return _facebookPostURL.Length > 0; }
-    public string [] GetFacebokPostURL() { return _facebookPostURL; }
-    public string [] _facebookPostURL;
-
-    #endregion
+    //#endregion
 
     #region STORAGE INFO
-    public int _maxMessagesTracked = 30;
-    public int MaximumMessagesTracked { get { return _maxMessagesTracked; } }
+    public int m_maxMessagesTracked = 30;
+    public int MaximumMessagesTracked { get { return m_maxMessagesTracked; } }
     #endregion
 
     #region FILTER
 
 
-    public bool UseMaxiumMessageSize = false;
-    private int _maximumMessageSize  =1024 ;
+    public bool m_useMaxiumMessageSize = false;
+    private int m_maximumMessageSize  =1024 ;
+    public bool m_useOsc=true;
+    public string m_oscAddress="127.0.0.1";
+    public int m_oscPort=2513;
+    public bool m_useUdp=true;
+    public string [] m_udpAddressListeners = new string[] {"127.0.0.1","192.168.137.103" };
+    public int m_udpPort=2512;
+    public bool m_useAllMessagesFile=true;
+    public bool m_useLastMessagesFile=false;
+    public bool m_allowSteamLaunchingFromChat=false;
+    public bool m_allowSteamKillingFromChat=false;
+    public string m_killStreamWord = "!stopstreaming";
+    public string m_startStreamKeyword= "!startstreaming";
+    public bool m_sendMockingMessages=false;
 
     public int MaximumMessageSize
     {
-        get { return _maximumMessageSize; }
-        set { _maximumMessageSize = value; }
+        get { return m_maximumMessageSize; }
+        set { m_maximumMessageSize = value; }
     }
 
 
@@ -481,7 +512,7 @@ public class ChatHackerConfiguration {
 
     public void SetRestreamChatURL(string url)
     {
-        _restreamEmbedURL = url;
+        m_restreamEmbedURL = url;
     }
     #endregion
 

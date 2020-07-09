@@ -1,1 +1,1 @@
-start /d "C:\Program Files (x86)\obs-studio\bin\64bit" obs64.exe --startstreaming
+start "" "C:\Users\stree\AppData\Local\Programs\restream-chat\Restream Chat.exe"

@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using RestreamChatHacking;
 
 public class ListenToUDPRestream : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class ListenToUDPRestream : MonoBehaviour
     public UDPReceive m_udpReceiver;
     public string m_lastMessage;
     public RestreamChatMessage m_lastRCM;
+    public RestreamMessageUnityEvent m_receivedMessage;
     void Start()
     {
         m_udpReceiver = new UDPReceive(portToListen);
@@ -30,6 +32,8 @@ public class ListenToUDPRestream : MonoBehaviour
                 if (msg != null) { 
                   // Debug.Log(msg);
                     m_lastRCM.SetWithOneLiner(msg.Trim());
+                    if (m_lastRCM.IsCorrectlyDefined())
+                        m_receivedMessage.Invoke(m_lastRCM.Duplicate()) ;
                 }
             }
             else msg = null;

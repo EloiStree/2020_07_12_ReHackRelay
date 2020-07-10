@@ -8,7 +8,6 @@ public class MonoRestreamAPI : MonoBehaviour {
     public void AddMessageToApi( RestreamChatMessage message)
     {
         AddMessagesToApi(message);
-
     }
     public void AddMessagesToApi(params RestreamChatMessage [] messages)
     {

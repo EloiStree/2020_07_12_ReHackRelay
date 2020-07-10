@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 namespace RestreamChatHacking
@@ -47,6 +48,21 @@ namespace RestreamChatHacking
         {
             get { return m_when; }
             set { m_when = value; }
+        }
+
+        public RestreamChatMessage Duplicate()
+        {
+            RestreamChatMessage duplicate = new RestreamChatMessage();
+            duplicate.SetWithOneLiner(GetAsOneLiner());
+
+            return duplicate;
+        }
+
+        public bool IsCorrectlyDefined()
+        {
+            return !string.IsNullOrEmpty(Date)
+                && !string.IsNullOrEmpty(When)
+                && !string.IsNullOrEmpty(UserName);
         }
 
         [SerializeField] string m_date;

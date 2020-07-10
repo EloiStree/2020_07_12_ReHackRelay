@@ -15,6 +15,9 @@ using System.Threading;
 namespace RestreamChatHacking
 {
 
+    //TODOLIST
+    //IF the user close the selenium window, close the stream softly and propose to reenter a new link.
+
     class Program
     {
         public class AppData {

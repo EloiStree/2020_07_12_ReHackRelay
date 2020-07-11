@@ -11,7 +11,7 @@ using RestreamChatHacking;
 
 public class ListenToUDPRestream : MonoBehaviour
 {
-    public int portToListen;
+    public int portToListen=2512;
     public UDPReceive m_udpReceiver;
     public string m_lastMessage;
     public RestreamChatMessage m_lastRCM;
@@ -34,6 +34,7 @@ public class ListenToUDPRestream : MonoBehaviour
                     m_lastRCM.SetWithOneLiner(msg.Trim());
                     if (m_lastRCM.IsCorrectlyDefined())
                         m_receivedMessage.Invoke(m_lastRCM.Duplicate()) ;
+                    m_lastRCM.Reset();
                 }
             }
             else msg = null;

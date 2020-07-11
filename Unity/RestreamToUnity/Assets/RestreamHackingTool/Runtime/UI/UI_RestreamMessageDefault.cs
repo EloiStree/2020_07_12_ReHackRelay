@@ -13,10 +13,18 @@ public class UI_RestreamMessageDefault : MonoBehaviour
     public Text m_message;
     public Text m_platfom;
     public Text m_timeReceived;
+    public bool m_hide;
+
+  
+    public void CopyInClipboard()
+    {
+        UnityClipboard.Set(m_messageDisplayed.GetAsOneLiner());
+    }
 
 
     public void SetWith(RestreamChatMessage message) {
         m_messageDisplayed = message;
+        m_hide =! message.IsCorrectlyDefined();
         Refresh();
     }
 
@@ -25,19 +33,20 @@ public class UI_RestreamMessageDefault : MonoBehaviour
         return m_messageDisplayed;
     }
 
-    private void Refresh()
+    public void Refresh()
     {
         if (m_messageDisplayed == null)
             return;
+         m_hide = !m_messageDisplayed.IsCorrectlyDefined();
 
-        if(m_userName!=null)
-            m_userName.text = m_messageDisplayed.UserName;
+        if (m_userName!=null)
+            m_userName.text = m_hide?"": m_messageDisplayed.UserName;
         if (m_message != null)
-            m_message.text = m_messageDisplayed.Message;
+            m_message.text = m_hide ? "" : m_messageDisplayed.Message;
         if (m_platfom != null)
-            m_platfom.text = m_messageDisplayed.Platform.ToString();
+            m_platfom.text = m_hide ? "" : m_messageDisplayed.Platform.ToString();
         if (m_timeReceived != null)
-            m_timeReceived.text = m_messageDisplayed.When; 
+            m_timeReceived.text = m_hide ? "" : m_messageDisplayed.When; 
 
 
     }

@@ -20,8 +20,12 @@ namespace RestreamChatHacking
             SetDateToNow();
             Platform = ChatPlatform.Unknow;
         }
+        public RestreamChatMessage(string userName, string message, ChatPlatform platform):this(userName, message)
+        {
+            Platform = platform;
+        }
 
-        
+
         public string Id
         {
             get { return Timestamp + "|" + UserName; }
@@ -58,6 +62,15 @@ namespace RestreamChatHacking
             return duplicate;
         }
 
+        public void Reset()
+        {
+            Date = "";
+            When = "";
+            UserName = "";
+            Message = "";
+            SetPlatform(ChatPlatform.Unknow);
+        }
+
         public bool IsCorrectlyDefined()
         {
             return !string.IsNullOrEmpty(Date)
@@ -80,7 +93,7 @@ namespace RestreamChatHacking
         public void SetDateToNow()
         {
             Date = DateTime.Now.ToString("yyyy-MM-dd");
-            When = DateTime.Now.ToString("hh:mm:ss");
+            When = DateTime.Now.ToString("HH:mm:ss");
         }
         
         public double Timestamp { get { return (new DateTime(Year, Month, Day, Hour, Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }

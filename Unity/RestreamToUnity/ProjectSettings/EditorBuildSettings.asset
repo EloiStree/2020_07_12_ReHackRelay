@@ -6,8 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/_Experiments/9GagGenerator/Scene/Demo_9GagFromChat.unity
-    guid: 3030e587a7ba3aa4f85a1c32416ba7fd
-  - enabled: 1
-    path: Assets/_Experiments/MathGame/Scene/Demo_MathGame.unity
-    guid: 4ccfd88405a4cd442b6b9718c2a68334
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  m_configObjects: {}

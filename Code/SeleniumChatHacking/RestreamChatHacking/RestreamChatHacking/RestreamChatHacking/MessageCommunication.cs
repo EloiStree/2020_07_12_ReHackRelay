@@ -177,7 +177,7 @@ namespace RestreamChatHacking
 
         void SendMessage(RestreamChatMessage message)
         {
-            Console.WriteLine("UDP -> " + message);
+            //Console.WriteLine("UDP -> " + message);
             if (m_sender != null && message != null)
                 m_sender.Send(message.GetAsOneLiner());
         }

@@ -41,7 +41,12 @@ namespace RestreamChatHacking
             get { return m_userName; }
             set { m_userName = value; }
         }
-        
+
+        public string GetUniqueId()
+        {
+            return Date+When+Platform+ UserName;
+        }
+
         private string m_when;
 
         public string When
@@ -58,12 +63,13 @@ namespace RestreamChatHacking
             set { m_date = value; }
         }
         public DateTime GetWhenAsDateTime() { 
-            return DateTime.ParseExact(Date+When, "yyyy-MM-ddhh:mm:ss", CultureInfo.InvariantCulture); }
+
+            return DateTime.ParseExact(Date+When, "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture); }
         public bool IsDateDefined() { return !string.IsNullOrEmpty(m_date); }
         public void SetDateToNow()
         {
             Date = DateTime.Now.ToString("yyyy-MM-dd");
-            When = DateTime.Now.ToString("hh:mm:ss");
+            When = DateTime.Now.ToString("HH:mm:ss");
         }
         [JsonIgnore]
         public double Timestamp { get { return (new DateTime(Year,Month,Day,Hour,Minute, Second).Subtract(new DateTime(1970, 1, 1))).TotalSeconds; } }
@@ -89,6 +95,14 @@ namespace RestreamChatHacking
             UserName = token[2];
             Platform = GetEnumOf(token[3]);
             Message = token[4];
+        }
+
+        public bool IsValuesDefined()
+        {
+            return !string.IsNullOrEmpty(UserName)
+                && !string.IsNullOrEmpty(Message)
+                && !string.IsNullOrEmpty(When)
+                && !string.IsNullOrEmpty(Date);
         }
 
         private ChatPlatform GetEnumOf(string text)

@@ -14,6 +14,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,7 +27,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -48,6 +48,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>RestreamChatHacking.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Bonsai.Core, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -97,14 +100,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccessRestreamCode.cs" />
+    <Compile Include="MessagesUtility.cs" />
+    <Compile Include="ExportToOtherApps.cs" />
+    <Compile Include="FakeChatMessageGenerator.cs" />
+    <Compile Include="RestreamDelegateLib.cs" />
+    <Compile Include="HTML2Messages.cs" />
     <Compile Include="MessageNotReadableException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RamMemoryRegisterOfMessages.cs" />
     <Compile Include="RestreamTchatMessage.cs" />
     <Compile Include="MessageCommunication.cs" />
+    <Compile Include="SeleniumAccessToRestreamChat.cs" />
+    <Compile Include="TDD\TDD_RestreamChatToChatMessages.cs" />
+    <Compile Include="TDD\TDD_Selenium.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
     <None Include="App.config" />
     <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
@@ -112,7 +126,7 @@
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 et x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using System.Collections;
 using System.Net.Mail;
 using System.Threading;
+using System.Reactive.Disposables;
+using System.Security.Cryptography.X509Certificates;
 
 namespace RestreamChatHacking
 {
@@ -20,6 +22,7 @@ namespace RestreamChatHacking
 
     class Program
     {
+        public static SeleniumThreadRunning m_instanceRunning;
         public class AppData {
             public static string RestreamAppDataPath
             {get
@@ -93,12 +96,19 @@ namespace RestreamChatHacking
         public static bool IsAllMessagesFileDefined() { return File.Exists(AppData.AllMessagesPath); }
 
 
-        static void Main(string[] args)
+        /// <summary>
+        /// MAIN
+        /// </summary>
+        public static void Main()
         {
+            AppDomain.CurrentDomain.ProcessExit += new EventHandler(ProcessExit);
+
+
+
             CheckForFilesPresence();
             LoadConfigurationFile();
             HelloWorldAndCredit();
-            string answer = "";
+
             AskForRestreamEmbedLink();
             SaveConfigurationFile();
             ConfigureUserOutput();
@@ -106,6 +116,9 @@ namespace RestreamChatHacking
             if (ChatHackerConfiguration.Instance.m_sendMockingMessages)
             LaunchDirtyMockupSystemOnThread();
 
+            
+
+            AddListenersToMessagesExport();
             LaunchRestreamChatOberver();
 
 
@@ -113,7 +126,11 @@ namespace RestreamChatHacking
             SayGoodBye();
         }
 
-      
+        static void ProcessExit(object sender, EventArgs e)
+        {
+            m_instanceRunning.StopAll();
+
+        }
         private static void LaunchDirtyMockupSystemOnThread()
         {
             Thread newThread = new Thread(UseMockUData);
@@ -125,48 +142,107 @@ namespace RestreamChatHacking
         {
             int count=0;
             while (true) {
-                if(mockUpAccess!=null)
-                mockUpAccess.FakeMessage("MockUp User", "Ha ha ha " + count++,ChatPlatform.Mockup);
-    
-                Thread.Sleep(1000);
+               RestreamChatMessage chatMessage = FakeChatMessageGenerator.CreateFakeMessage("MockUp User", "Ha ha ha " + count++,ChatPlatform.Mockup);
+                ExportToOtherApps.ThrowMessages(chatMessage);
+
+               Thread.Sleep(1000);
             }
 
         }
+        public  class SeleniumThreadRunning: IDisposable
+        {
+            public RamMemoryRegisterOfMessages m_messagesInMemory;
+            public SeleniumAccessToRestreamChat m_selenium;
+            public Thread m_runningThread;
+            public bool m_requestThreadToStop = false;
+            public int m_timeBetweenFrameInMs = 1000;
 
+            public void Dispose()
+            {
+                m_requestThreadToStop = false;
+            }
+
+            public bool IsAllowToRun()
+            {
+                return !m_requestThreadToStop;
+            }
+
+            public int GetDelayBetweenFrame()
+            {
+                return m_timeBetweenFrameInMs;
+            }
+            public void StopAll() {
+
+                m_selenium.TeardownRunningDriver();
+                m_runningThread.Abort();
+            }
+
+            public void StopRunning()
+            {
+                m_requestThreadToStop = true;
+            }
+        }
         private static void LaunchRestreamChatOberver()
         {
-            AccessRestreamCode restreamChat = new AccessRestreamCode();
-            restreamChat.m_useDebug = true;
-            restreamChat.SetAllowingAllSize(!ChatHackerConfiguration.Instance.m_useMaxiumMessageSize);
-            restreamChat.SetMaximumMessageSizeTo(ChatHackerConfiguration.Instance.MaximumMessageSize);
-            AddMockUpSystem(restreamChat);
-            AddListenersToRestreamChat(restreamChat);
-            LaunchRestreamChatObserver(restreamChat);
+            RamMemoryRegisterOfMessages memory = new RamMemoryRegisterOfMessages();
+            SeleniumAccessToRestreamChat restreamChat = new SeleniumAccessToRestreamChat();
+            restreamChat.OpenPage(ChatHackerConfiguration.Instance.GetRestreamChatURL());
+            // memory.SetMaximumMessageSizeTo(ChatHackerConfiguration.Instance.MaximumMessageSize);
+            Thread t = new Thread(new ThreadStart(CheckForNewMessages));
+            m_instanceRunning = new SeleniumThreadRunning();
+            m_instanceRunning.m_messagesInMemory = memory;
+            m_instanceRunning.m_selenium = restreamChat;
+            m_instanceRunning.m_runningThread = t;
+            t.Start();
+            
         }
-
-        private static AccessRestreamCode mockUpAccess;
-        private static void AddMockUpSystem(AccessRestreamCode restreamChat)
+        private static void CheckForNewMessages()
         {
-            mockUpAccess = restreamChat;
+            string htmlCode="";
+            List<string> messagesAsHtml;
+            List<RestreamChatMessage> foundMessageInPage;
+            List<RestreamChatMessage> newMessageInPage;
+            long tick=0;
+           
+            while (m_instanceRunning!=null && m_instanceRunning.IsAllowToRun()) {
+
+       
+                if (!m_instanceRunning.m_selenium.IsNavigatorOpen())
+                {
+                    m_instanceRunning.StopRunning();
+                }
+                else
+                {
+                    Console.Out.WriteLine("\n\nTick:\n" + tick);
+                   // Console.Out.WriteLine("HTML:\n" + htmlCode);
+
+                    htmlCode =  m_instanceRunning.m_selenium.GetRestreamHtmlPageInformation();
+                    HTML2Messages.GetMessagesInHTML(htmlCode, out messagesAsHtml, out foundMessageInPage);
+
+                    if (foundMessageInPage.Count > 0) {
+                       m_instanceRunning.m_messagesInMemory.AddMessagesAndRecovertNewInList(ref foundMessageInPage, out newMessageInPage);
+                       // m_instanceRunning.m_messagesInMemory.Add(newMessageInPage);
+                        ExportToOtherApps.Push(newMessageInPage);
+                    }
+                    Console.Out.WriteLine(
+                        string.Format("Msg Pages:{0} ", foundMessageInPage.Count));
+
+                }
+                Thread.Sleep(m_instanceRunning.GetDelayBetweenFrame());
+                tick++;
+            }
         }
 
-        private static void LaunchRestreamChatObserver(AccessRestreamCode d)
-        {
-            d.Setup(false);
-            d.StartToListenAtRestreamEmbedUrl(ChatHackerConfiguration.Instance.GetRestreamChatURL());
-            d.TeardownRunningServer();
-        }
-
-        private static void AddListenersToRestreamChat(AccessRestreamCode d)
+        private static void AddListenersToMessagesExport()
         {
             // Save in files
-            d.m_onMessageDetected += ThrowMessageToListeners;
+            ExportToOtherApps.AddListener(ThrowMessageToListeners);
             // Launch server from the chat
-            d.m_onMessageDetected += LaunchStreaming;
+            ////ExportToOtherApps.AddListener(LaunchStreaming);
             // Stop server from the chat
-            d.m_onMessageDetected += StopStreaming;
-            // Debug incoming message
-            d.m_onMessageDetected += DisplayMessage;
+            //ExportToOtherApps.AddListener(StopStreaming);
+            //// Debug incoming message
+            ExportToOtherApps.AddListener(DisplayMessage);
         }
 
         private static void SayGoodBye()
@@ -182,7 +258,7 @@ namespace RestreamChatHacking
 
                 Console.WriteLine("Press any key to leave...");
                 answer = Console.ReadLine();
-                mockUpAccess.FakeMessage("RestreamHacking", answer, ChatPlatform.Mockup);
+              // mockUpAccess.FakeMessage("RestreamHacking", answer, ChatPlatform.Mockup);
 
 
             }
@@ -313,7 +389,7 @@ namespace RestreamChatHacking
         private static void DisplayMessage(RestreamChatMessage message)
         {
 
-            Console.WriteLine(string.Format("{3} | {0},{1}:{2}", message.UserName, message.When, message.Message, message.Platform));
+            Console.WriteLine(string.Format(">> {3} | {0},{1}:{2}", message.UserName, message.When, message.Message, message.Platform));
         }
 
         private static void LaunchStreaming (RestreamChatMessage message)
@@ -349,8 +425,7 @@ namespace RestreamChatHacking
         private static MessageCommunication.IThrow allMessagesFile = null;
         private static MessageCommunication.IThrow sendOSCMessages = null;
         private static MessageCommunication.IThrow [] sendUDPListeners = null;
-        private static Queue<RestreamChatMessage> m_lastMessages = new Queue<RestreamChatMessage>();
-        private static void ThrowMessageToListeners(RestreamChatMessage message)
+         private static void ThrowMessageToListeners(RestreamChatMessage message)
         {
            
            
@@ -393,7 +468,6 @@ namespace RestreamChatHacking
                 
             }
 
-            EnqueueWithMaximumBoundery(message);
 
             if (recentMessagesFile != null)
                 recentMessagesFile.SendChatMessage(message);
@@ -412,12 +486,6 @@ namespace RestreamChatHacking
 
         }
 
-        private static void EnqueueWithMaximumBoundery(RestreamChatMessage message)
-        {
-            while (m_lastMessages.Count > ChatHackerConfiguration.Instance.MaximumMessagesTracked)
-                m_lastMessages.Dequeue();
-            m_lastMessages.Enqueue(message);
-        }
 
     }
    

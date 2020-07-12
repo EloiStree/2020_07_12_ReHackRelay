@@ -46,14 +46,12 @@ namespace RestreamChatHacking
             var xPathDoc = new XPathDocument(new StringReader(html));
             var nav = xPathDoc.CreateNavigator();
             bool hasNext = true;
-            int antiLoop = 50;
             var sender = nav.Select("//*[contains(@class, 'message-item')]");
-            while (hasNext && antiLoop>0)
+            while (hasNext)
             {
                 hasNext = sender.MoveNext();
                  //Console.Out.WriteLine("\n\nElement:\n" + sender.Current.InnerXml);
                 messagesAsHTmlDiv.Add(sender.Current.InnerXml);
-                antiLoop--;
             }
 
         }

@@ -52,6 +52,9 @@
   <PropertyGroup>
     <StartupObject>RestreamChatHacking.Program</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>IconsReHack2.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Bonsai.Core, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Bonsai.Core.2.3.0\lib\net45\Bonsai.Core.dll</HintPath>
@@ -100,9 +103,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BatchToLaunch.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="ConsoleUI.cs" />
     <Compile Include="MessagesUtility.cs" />
     <Compile Include="ExportToOtherApps.cs" />
     <Compile Include="FakeChatMessageGenerator.cs" />
+    <Compile Include="RestreamAppData.cs" />
     <Compile Include="RestreamDelegateLib.cs" />
     <Compile Include="HTML2Messages.cs" />
     <Compile Include="MessageNotReadableException.cs" />
@@ -112,8 +119,10 @@
     <Compile Include="RestreamTchatMessage.cs" />
     <Compile Include="MessageCommunication.cs" />
     <Compile Include="SeleniumAccessToRestreamChat.cs" />
+    <Compile Include="SimulateFakeMessage.cs" />
     <Compile Include="TDD\TDD_RestreamChatToChatMessages.cs" />
     <Compile Include="TDD\TDD_Selenium.cs" />
+    <Compile Include="User32Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig">
@@ -134,6 +143,10 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="IconsReHack.ico" />
+    <Content Include="IconsReHack2.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Selenium.Chrome.WebDriver.2.33\build\Selenium.Chrome.WebDriver.targets" Condition="Exists('..\packages\Selenium.Chrome.WebDriver.2.33\build\Selenium.Chrome.WebDriver.targets')" />

@@ -11,6 +11,7 @@ using System.Xml.XPath;
 using System.Collections.Generic;
 using System.Linq;
 using OpenQA.Selenium.IE;
+using System.Drawing;
 
 namespace RestreamChatHacking
 {
@@ -35,7 +36,16 @@ namespace RestreamChatHacking
                 else
                     m_driver = new ChromeDriver();
 
-                m_driver.Manage().Window.Size = new System.Drawing.Size(300, 200);
+                Thread.Sleep(2000);
+                if (ChatHackerConfiguration.Instance.IsUserRequestToHideInterface())
+                {
+                    m_driver.Manage().Window.Size = new System.Drawing.Size(0, 0);
+                    m_driver.Manage().Window.Position = new System.Drawing.Point(-2000, 0);
+                }
+                else
+                {
+                    m_driver.Manage().Window.Size = new System.Drawing.Size(300, 200);
+                }
             }
 
 

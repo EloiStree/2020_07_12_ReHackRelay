@@ -14,9 +14,9 @@ The only purpuse of this tools are:
 - to provide the Restream platform more users as the tool is kind of amazingly usefull.  
 
 The code of my library are under ["Eloi Donation license"](https://eloistree.page.link/license).  
-**But don't forget that if your use of the Restream tool is commercial way, you need to talk about it direclty with the [Restream Team](https://restream.io/).**  
-
-Hope my code is useful to you. 
-May the code be with you.  
+**But don't forget that if your use of the Restream tool in commercial way, you need to talk about it direclty with the [Restream Team](https://restream.io/).**  
+  
+Hope my code is useful to you.   
+May the code be with you.    
 
 Éloi Strée

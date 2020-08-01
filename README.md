@@ -1,8 +1,12 @@
 # 2017_12_23_RestreamChatHacking
 Attempt to hack the Restream chat as they don't provide API to access it.
 
-No tutorial for the moment.   
+No tutorial for the moment.  
+Except this quick video to explain the concept:  
+https://www.youtube.com/watch?v=berFrZ2QzaE  
+
 Ping me if you need.   
+
 
 Find more information on the project and download here:  
 https://eloistree.itch.io/rehack  

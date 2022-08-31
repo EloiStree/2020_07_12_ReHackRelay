@@ -26,15 +26,20 @@ namespace RestreamChatHacking
 
         public void SetupSeleniumDriver(bool useDebug, NavigatorType navigatorType)
         {
-            if (m_driver == null) { 
-            
+            if (m_driver == null) {
+
                 if (navigatorType == NavigatorType.Firefox)
                     m_driver = new FirefoxDriver();
                 else
                 if (navigatorType == NavigatorType.InternetExplorer)
                     m_driver = new InternetExplorerDriver();
-                else
-                    m_driver = new ChromeDriver();
+                else {
+                    string pathDriver = Environment.CurrentDirectory+ "\\GoogleDriver";
+                    Console.WriteLine("Driver:" +pathDriver);
+                    m_driver = new ChromeDriver(pathDriver);
+                 }
+
+
 
                 Thread.Sleep(2000);
                 if (ChatHackerConfiguration.Instance.IsUserRequestToHideInterface())

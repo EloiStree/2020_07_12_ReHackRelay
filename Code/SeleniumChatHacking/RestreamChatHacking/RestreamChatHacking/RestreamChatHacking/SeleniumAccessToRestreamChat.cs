@@ -26,8 +26,8 @@ namespace RestreamChatHacking
 
         public void SetupSeleniumDriver(bool useDebug, NavigatorType navigatorType)
         {
-            if (m_driver == null) { 
-            
+            if (m_driver == null) {
+
                 if (navigatorType == NavigatorType.Firefox)
                     m_driver = new FirefoxDriver();
                 else

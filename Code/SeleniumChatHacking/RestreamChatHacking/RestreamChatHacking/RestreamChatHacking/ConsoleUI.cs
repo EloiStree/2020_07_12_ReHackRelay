@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace RestreamChatHacking
 {
@@ -17,6 +18,7 @@ namespace RestreamChatHacking
             Console.Out.WriteLine("> Config stored in " + RestreamAppData.RestreamAppDataPath);
             Console.Out.WriteLine("> Code Restream Hack: " + "https://gitlab.com/eloistree/2017_12_23_RestreamChatHacking");
             Console.Out.WriteLine("> Code Unity GitHub & Manual: " + ".(Incoming).");
+            Console.Out.WriteLine("> Download last Google chrome Drive: " + "https://chromedriver.chromium.org/downloads");
             Console.Out.WriteLine("> Issue to report: " + "https://eloistree.page.link/discord");
             Console.Out.WriteLine("> License: " + "https://eloistree.page.link/license");
             Console.Out.WriteLine("> Credit: " + "Strée Eloi - https://ko-fi.com/eloistree");

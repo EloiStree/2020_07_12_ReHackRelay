@@ -48,6 +48,7 @@ namespace RestreamChatHacking
                 Console.Out.WriteLine("The app only work if:\n- This console is open\n-Resteam Chat application is open\n- Good Restream link was given\n-The launched chome window is open");
 
                 Console.Out.WriteLine("\nAs you are new, could you give the following basic information?\n");
+               
                 ConsoleCommunication.AskForTargetUdpPort();
                 ConsoleCommunication.AskForTargetUdpIps();
                 ChatHackerConfiguration.Instance.m_isFirstTimeTheAppIsLaunch = false;

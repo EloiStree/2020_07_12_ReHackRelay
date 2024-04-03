@@ -99,7 +99,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppConfigSelenium.cs" />
     <Compile Include="BatchToLaunch.cs" />
+    <Compile Include="ChatHackerConfigurationByJson.cs" />
     <Compile Include="Class1.cs" />
     <Compile Include="ConsoleUI.cs" />
     <Compile Include="MessagesUtility.cs" />

@@ -13,7 +13,11 @@ namespace RestreamChatHacking
         {
             get
             {
-                return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\RestreamChatHacking";
+                bool useNearFile = true;
+                if(useNearFile)
+                    return Directory.GetCurrentDirectory() + "\\Config";
+                else 
+                    return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\RestreamChatHacking";
             }
         }
         public static string ConfigurationPath
@@ -23,6 +27,7 @@ namespace RestreamChatHacking
                 return RestreamAppDataPath + "\\config.json";
             }
         }
+       
         public static void CreateReastreamFolder()
         {
             Directory.CreateDirectory(RestreamAppData.RestreamAppDataPath);
@@ -34,11 +39,11 @@ namespace RestreamChatHacking
         }
         public static void SaveConfigurationFile()
         {
-            File.WriteAllText(RestreamAppData.ConfigurationPath, ChatHackerConfiguration.GetJson());
+            File.WriteAllText(RestreamAppData.ConfigurationPath, ChatHackerConfigurationByJson.GetJson());
         }
         public static void LoadConfigurationFile()
         {
-            ChatHackerConfiguration.SetFromJson(File.ReadAllText(RestreamAppData.ConfigurationPath));
+            ChatHackerConfigurationByJson.SetFromJson(File.ReadAllText(RestreamAppData.ConfigurationPath));
         }
 
         public static void CreateAndOverrideFile(string path, string text)

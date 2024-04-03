@@ -6,7 +6,6 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
-using System.IO;
 using System.Xml.XPath;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +14,7 @@ using System.Drawing;
 
 namespace RestreamChatHacking
 {
+
     public class SeleniumAccessToRestreamChat
     {
 
@@ -44,32 +44,39 @@ namespace RestreamChatHacking
         {
             if (m_driver == null) {
 
-                if (navigatorType == NavigatorType.Firefox)
-                    m_driver = new FirefoxDriver();
+                AppConfigSelenium.ReloadFile();
+                if (navigatorType == NavigatorType.Firefox) {
+                    //https://github.com/mozilla/geckodriver/releases
+                    string pathDriverFolder = AppConfigSelenium.Instance.m_firefoxDriverAbsoluteFolderPath;
+                    Console.WriteLine("Driver:" + pathDriverFolder);
+                    FirefoxOptions options = new FirefoxOptions();
+                    options.BrowserExecutableLocation = AppConfigSelenium.Instance.m_firefoxExePath;
+                    //options.AddArguments(@"user-data-dir=" + pathDriver);
+                    m_driver = new FirefoxDriver(pathDriverFolder, options);
+                }
                 else
                 if (navigatorType == NavigatorType.InternetExplorer)
                     m_driver = new InternetExplorerDriver();
                 else {
-                    string pathDriver = Environment.CurrentDirectory+ "\\GoogleDriver";
-                    Directory.CreateDirectory(pathDriver);
+                    string pathDriver = AppConfigSelenium.Instance.m_googleDriverRelativeFolderPath;
                     Console.WriteLine("Driver:" +pathDriver);
                     ChromeOptions options = new ChromeOptions();
+                    options.BinaryLocation = AppConfigSelenium.Instance.m_googleExePath;
                     options.AddArguments(@"user-data-dir="+ pathDriver);
                     m_driver = new ChromeDriver(pathDriver, options);
                  }
 
-                //specify location for profile creation/ access
 
 
                 Thread.Sleep(2000);
-                if (ChatHackerConfiguration.Instance.IsUserRequestToHideInterface())
+                if (ChatHackerConfigurationByJson.Instance.IsUserRequestToHideInterface())
                 {
                     m_driver.Manage().Window.Size = new System.Drawing.Size(0, 0);
                     m_driver.Manage().Window.Position = new System.Drawing.Point(-2000, 0);
                 }
                 else
                 {
-                    m_driver.Manage().Window.Size = new System.Drawing.Size(ChatHackerConfiguration.Instance.m_windowWidth, ChatHackerConfiguration.Instance.m_windowHeight);
+                    m_driver.Manage().Window.Size = new System.Drawing.Size(ChatHackerConfigurationByJson.Instance.m_windowWidth, ChatHackerConfigurationByJson.Instance.m_windowHeight);
                 }
 
              
@@ -79,7 +86,7 @@ namespace RestreamChatHacking
         }
         public void OpenPage(string url) {
             if (m_driver == null)
-                SetupSeleniumDriver(false, NavigatorType.Chrome);
+                SetupSeleniumDriver(false, NavigatorType.Firefox);
             m_driver.Navigate().GoToUrl(url);
         }
 

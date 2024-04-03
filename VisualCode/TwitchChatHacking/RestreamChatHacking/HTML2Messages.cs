@@ -198,7 +198,7 @@ namespace RestreamChatHacking
             }
             catch (Exception e)
             {
-                if (ChatHackerConfiguration.Instance.DebugOption.DisplayMessage)
+                if (ChatHackerConfigurationByJson.Instance.DebugOption.DisplayMessage)
                     Console.WriteLine("" + messageRaw);
                     Console.WriteLine("############################# Message ###################################");
                     Console.WriteLine("" + messageRaw);

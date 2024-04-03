@@ -50,7 +50,7 @@ namespace RestreamChatHacking
         internal static void AskForTargetUdpIps()
         {
             List<string> ips = new List<string>();
-            ips.AddRange(ChatHackerConfiguration.Instance.m_udpAddressListeners);
+            ips.AddRange(ChatHackerConfigurationByJson.Instance.m_udpAddressListeners);
             string answer = "";
             while (answer != "stop") { 
                 answer = AskQuestion("Could you enter the Ips to target ?", "- 127.0.0.1 Is alway targeted.\n- Type 'stop' to stop entering targets\n- 'clear' to remove all except default");
@@ -59,15 +59,15 @@ namespace RestreamChatHacking
                 else if (answer == "stop") { }
                 else ips.Add(answer.Trim());
             }
-            ChatHackerConfiguration.Instance.m_udpAddressListeners = ips.ToArray();
+            ChatHackerConfigurationByJson.Instance.m_udpAddressListeners = ips.ToArray();
         }
 
         internal static void AskForTargetUdpPort()
         {
-          string port=  AskQuestion("Could you enter the UDP port you want to use ?", "Current:" + ChatHackerConfiguration.Instance.m_udpPort);
+          string port=  AskQuestion("Could you enter the UDP port you want to use ?", "Current:" + ChatHackerConfigurationByJson.Instance.m_udpPort);
             int portInt;
             if (int.TryParse(port, out portInt))
-                ChatHackerConfiguration.Instance.m_udpPort = portInt;
+                ChatHackerConfigurationByJson.Instance.m_udpPort = portInt;
         }
 
         public static void AskForRestreamEmbedLink()
@@ -77,10 +77,10 @@ namespace RestreamChatHacking
             //    !Empty = yes => store it in config
             //    Save the new config  
 
-            if (ChatHackerConfiguration.Instance.IsRestreamDefined())
+            if (ChatHackerConfigurationByJson.Instance.IsRestreamDefined())
             {
                 answer = AskQuestion("Do you want to use this link for Twitch IRC ?\n"
-                    + ChatHackerConfiguration.Instance.GetRestreamChatURL()
+                    + ChatHackerConfigurationByJson.Instance.GetRestreamChatURL()
                     , "(N)o or any keys to continue");
 
                 if (IsNo(answer))
@@ -105,7 +105,7 @@ namespace RestreamChatHacking
                    "Enter to the Restream IRC link to continue");
             } while (!(answer.Trim().ToLower().StartsWith("http")));
             //QUESTION TO ME:  SHOUD I CHECK IF THE ANSWER IS A  URL ???
-            ChatHackerConfiguration.Instance.SetRestreamChatURL(answer);
+            ChatHackerConfigurationByJson.Instance.SetRestreamChatURL(answer);
         }
         public static string AskQuestion(string question, string proposition)
         {

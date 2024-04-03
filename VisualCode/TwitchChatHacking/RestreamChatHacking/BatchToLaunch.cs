@@ -11,7 +11,7 @@ namespace RestreamChatHacking
     {
         public static void TryLaunchRestream()
         {
-            if (ChatHackerConfiguration.Instance.m_launchRestreamWithTheApp)
+            if (ChatHackerConfigurationByJson.Instance.m_launchRestreamWithTheApp)
             {
                
 
@@ -31,9 +31,9 @@ namespace RestreamChatHacking
 
         public static void LaunchStreaming(RestreamChatMessage message)
         {
-            if (ChatHackerConfiguration.Instance.m_allowSteamLaunchingFromChat)
+            if (ChatHackerConfigurationByJson.Instance.m_allowSteamLaunchingFromChat)
             {
-                if (message.Message.Contains(ChatHackerConfiguration.Instance.m_startStreamKeyword))
+                if (message.Message.Contains(ChatHackerConfigurationByJson.Instance.m_startStreamKeyword))
                 {
 
                     Console.WriteLine("Action: Try to launch streaming");
@@ -46,10 +46,10 @@ namespace RestreamChatHacking
 
         public static void StopStreaming(RestreamChatMessage message)
         {
-            if (ChatHackerConfiguration.Instance.m_allowSteamKillingFromChat)
+            if (ChatHackerConfigurationByJson.Instance.m_allowSteamKillingFromChat)
             {
 
-                if (message.Message.Contains(ChatHackerConfiguration.Instance.m_killStreamWord))
+                if (message.Message.Contains(ChatHackerConfigurationByJson.Instance.m_killStreamWord))
                 {
                     Console.WriteLine("Action: Try to stop streaming");
                     LaunchBat("StopStreaming");

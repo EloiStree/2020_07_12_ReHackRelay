@@ -33,8 +33,13 @@ namespace RestreamChatHacking
                 else
                 if (navigatorType == NavigatorType.InternetExplorer)
                     m_driver = new InternetExplorerDriver();
-                else
-                    m_driver = new ChromeDriver();
+                else {
+                    string pathDriver = Environment.CurrentDirectory+ "\\GoogleDriver";
+                    Console.WriteLine("Driver:" +pathDriver);
+                    m_driver = new ChromeDriver(pathDriver);
+                 }
+
+
 
                 Thread.Sleep(2000);
                 if (ChatHackerConfiguration.Instance.IsUserRequestToHideInterface())

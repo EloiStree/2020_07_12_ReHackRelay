@@ -16,6 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using RestreamChatHacking;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Newtonsoft.Json.Converters;
 
 namespace RestreamChatHacking
 {
@@ -299,7 +300,7 @@ namespace RestreamChatHacking
         public string m_oscAddress = "127.0.0.1";
         public int m_oscPort = 2513;
         public bool m_useUdp = true;
-        public string[] m_udpAddressListeners = new string[] { "127.0.0.1", "192.168.137.103" };
+        public string[] m_udpAddressListeners = new string[] { "127.0.0.1" };
         public int m_udpPort = 2512;
         public bool m_useAllMessagesFile = true;
         public bool m_useLastMessagesFile = false;
@@ -326,7 +327,8 @@ namespace RestreamChatHacking
         #region SAVE AND LOAD
         public static string GetJson()
         {
-            return JsonConvert.SerializeObject(Instance);
+            return JsonConvert.SerializeObject(Instance ,Formatting.Indented,
+           new JsonConverter[] { new StringEnumConverter() });
         }
 
         public static void SetFromJson(string json)
